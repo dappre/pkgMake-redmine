@@ -1,0 +1,8 @@
+/var/www/redmine/log/production.log {
+    daily
+    missingok
+    rotate 10
+    copytruncate
+    compress
+    sharedscripts
+}

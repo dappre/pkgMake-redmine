@@ -1,0 +1,8 @@
+# Postgresql setup
+production:
+  adapter: postgresql
+  database: redmine
+  host: localhost
+  username: redmine
+  password:
+  encoding: utf8
