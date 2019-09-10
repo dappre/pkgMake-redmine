@@ -1,0 +1,22 @@
+# MySQL/MariaDB setup
+production:
+  adapter: mysql2
+  database: redmine
+  host: localhost
+  username: redmine
+  password: redmine
+  encoding: utf8
+
+# Postgresql setup
+test:
+  adapter: postgresql
+  database: redmine
+  host: localhost
+  username: redmine
+  password: redmine
+  encoding: utf8
+
+# SQLite setup
+development:
+  adapter: sqlite3
+  database: db/redmine.sqlite3

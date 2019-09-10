@@ -3,6 +3,10 @@
 %define rpm_release  #RPM_RELEASE#
 %define rpm_packager #RPM_PACKAGER#
 
+%define ruby_scl    rh-ruby23
+%define ruby_pfx    %{ruby_scl}-
+%define ruby_dir    /opt/rh/%{ruby_scl}/root
+
 Name:           %{rpm_name}
 Version:        %{rpm_version}
 Release:        %{rpm_release}%{?dist}
@@ -13,39 +17,37 @@ URL:            http://www.redmine.org
 Source0:        http://www.redmine.org/releases/#RPM_NAME#-#RPM_VERSION#.tar.gz
 Source101:      %{name}.logrotate
 Source102:      %{name}.apache24
-Source103:      %{name}-pg-database.yml
-#BuildRequires: ruby >= 1.8.7
-#BuildRequires: ruby-RubyGems
-#BuildRequires:	ruby-fastercsv
+Source103:      %{name}-database.yml
 Requires:       webserver
-Requires:       rubygem-rails >= 4.0.1
-Requires:       rubygems
 Requires:       %{name}-db
-Requires:       rubygem-bigdecimal
-Requires:       rubygem(jquery-rails) >= 2.0.2
-Requires:       rubygem(i18n) >= 0.6.6
-Requires:       rubygem(coderay) >= 1.0.9
-Requires:       rubygem(fastercsv) >= 1.5.0
-Requires:       rubygem(builder) => 3.0.0
-Requires:       rubygem-database_cleaner
-%if 0%{?fedora} > 20
-# Only suggests rubygem-passenger, after all, it can work with fcgi too
-Suggests:       rubygem-passenger
-Suggests:       ruby-RMagick
-Suggests:       rubygem-ruby-openid
-Suggests:       %{name}-scm
-Suggests:       ruby-rack-openid
-Suggests:       ruby-selenium-webdriver
-Suggests:       ruby-actionpack
-Suggests:       ruby-net-ldap
-Suggests:       ruby-yard
-Suggests:       ruby-shoulda
-Suggests:       ruby-mocha
-Suggests:       ruby-capybara
-Suggests:       ruby-protected_attributes
-Suggests:       ruby-actionpack-action_caching
-%endif
-BuildArch:      noarch
+Requires:       %{ruby_pfx}rubygem-rails
+Requires:       %{ruby_pfx}rubygem-rouge
+Requires:       %{ruby_pfx}rubygem-request_store
+Requires:       %{ruby_pfx}rubygem-mini_mime
+Requires:       %{ruby_pfx}rubygem-actionpack-xml_parser
+Requires:       %{ruby_pfx}rubygem-roadie-rails
+Requires:       %{ruby_pfx}rubygem-mimemagic
+Requires:       %{ruby_pfx}rubygem-mail
+Requires:       %{ruby_pfx}rubygem-csv
+Requires:       %{ruby_pfx}rubygem-nokogiri
+Requires:       %{ruby_pfx}rubygem-i18n
+Requires:       %{ruby_pfx}rubygem-tzinfo-data
+Requires:       %{ruby_pfx}rubygem-rbpdf
+Requires:       %{ruby_pfx}rubygem-net-ldap
+Requires:       %{ruby_pfx}rubygem-ruby-openid
+Requires:       %{ruby_pfx}rubygem-rack-openid
+Requires:       %{ruby_pfx}rubygem-rmagick
+Requires:       %{ruby_pfx}rubygem-redcarpet
+
+# Require bundler and deps to package all requires gems
+BuildRequires:  %{ruby_pfx}ruby-devel
+BuildRequires:  %{ruby_pfx}rubygem-bundler
+BuildRequires:  gcc
+BuildRequires:  automake
+BuildRequires:  zlib-devel
+BuildRequires:  ImageMagick-devel
+
+BuildArch:      x86_64
 
 %description
 Redmine is a flexible project management web application. Written using
@@ -75,7 +77,7 @@ Overview
 %package pg
 Summary:        A flexible project management web application - pgsql connector
 Group:          Networking/WWW
-Requires:       rubygem-pg
+Requires:       %{ruby_pfx}rubygem-pg
 Provides:       %{name}-pg = %{version}-%{release}
 Provides:       %{name}-db = %{version}-%{release}
 
@@ -88,12 +90,11 @@ database backend.
 
 
 %files pg
-%{_var}/www/%{name}/config/database.postgres.yml
 #-------------------------------------------------------------------------------
 %package mysql
 Summary:        A flexible project management web application - mysql connector
 Group:          Networking/WWW
-Requires:       rubygem-mysql2
+Requires:       %{ruby_pfx}rubygem-mysql2
 Provides:       %{name}-mysql = %{version}-%{release}
 Provides:       %{name}-db    = %{version}-%{release}
 
@@ -106,12 +107,11 @@ database backend.
 
 
 %files mysql
-%config(noreplace) %{_var}/www/%{name}/config/database.yml
 #-------------------------------------------------------------------------------
 %package sqlite
 Summary:        A flexible project management web application - sqlite connector
 Group:          Networking/WWW
-Requires:       rubygem-sqlite3
+Requires:       %{ruby_pfx}rubygem-sqlite3
 Provides:       %{name}-sqlite = %{version}-%{release}
 Provides:       %{name}-db     = %{version}-%{release}
 
@@ -210,6 +210,44 @@ version control system backend
 
 %files cvs
 #-------------------------------------------------------------------------------
+%package rubygems
+Summary:        A flexible project management web application - cvs backend
+Group:          Networking/WWW
+Requires:       %{ruby_pfx}rubygems
+Provides:       %{ruby_pfx}rubygem-rails
+Provides:       %{ruby_pfx}rubygem-rouge
+Provides:       %{ruby_pfx}rubygem-request_store
+Provides:       %{ruby_pfx}rubygem-mini_mime
+Provides:       %{ruby_pfx}rubygem-actionpack-xml_parser
+Provides:       %{ruby_pfx}rubygem-roadie-rails
+Provides:       %{ruby_pfx}rubygem-mimemagic
+Provides:       %{ruby_pfx}rubygem-mail
+Provides:       %{ruby_pfx}rubygem-csv
+Provides:       %{ruby_pfx}rubygem-nokogiri
+Provides:       %{ruby_pfx}rubygem-i18n
+Provides:       %{ruby_pfx}rubygem-tzinfo-data
+Provides:       %{ruby_pfx}rubygem-rbpdf
+Provides:       %{ruby_pfx}rubygem-net-ldap
+Provides:       %{ruby_pfx}rubygem-ruby-openid
+Provides:       %{ruby_pfx}rubygem-rack-openid
+Provides:       %{ruby_pfx}rubygem-rmagick
+Provides:       %{ruby_pfx}rubygem-redcarpet
+Provides:       %{ruby_pfx}rubygem-pg
+Provides:       %{ruby_pfx}rubygem-mysql2
+Provides:       %{ruby_pfx}rubygem-sqlite3
+
+%description rubygems
+Redmine is a flexible project management web application. Written using
+Ruby on Rails framework, it is cross-platform and cross-database.
+
+This package contains the needed Ruby gems to run the webapp
+
+
+%files rubygems
+%{ruby_dir}/usr/share/gems
+%{ruby_dir}/usr/local/bin
+#-------------------------------------------------------------------------------
+
 
 %prep
 %setup -q
@@ -219,10 +257,21 @@ rm -f *.00??
 
 %build
 find . -name ".gitignore" -exec rm {} \;
+find . -name ".hgignore" -exec rm {} \;
+rm -f appveyor.yml
+# Build and install required gems
+pwd
+scl enable %{ruby_scl} -- bundle install --with "ldap openid" --binstubs=./gems-bin  --path=./gems-path
+%{__rm} -rf .bundle
 
 %install
 install -d %{buildroot}%{_var}/www/%{name}
-cp -rf * %{buildroot}%{_var}/www/%{name}
+%{__mkdir} -p %{buildroot}%{ruby_dir}/usr/local
+%{__mkdir} -p %{buildroot}%{ruby_dir}/usr/share
+%{__cp} -rf gems-bin %{buildroot}%{ruby_dir}/usr/local/bin
+%{__cp} -rf gems-path/ruby/* %{buildroot}%{ruby_dir}/usr/share/gems
+%{__rm} -rf gems-bin gems-path .bundle
+%{__cp} -rf * %{buildroot}%{_var}/www/%{name}
 
 # Don’t include bundled rails
 rm -rf %{buildroot}%{_var}/www/%{name}/vendor/rails
@@ -230,10 +279,8 @@ rm -rf %{buildroot}%{_var}/www/%{name}/vendor/rails
 # Don't include some prebuilt binaries
 rm -rf %{buildroot}%{_var}/www/%{name}/lib/plugins/rfpdf/lib/fonts/ttf2ufm
 
-# Copy database.yml.example as it’s mandatory to run redmine
-cp %{buildroot}%{_var}/www/%{name}/config/database.yml.example %{buildroot}%{_var}/www/%{name}/config/database.yml
-# Likewise, add postgresql conf
-install -D -m644 %{SOURCE103} %{buildroot}%{_var}/www/%{name}/config/database.postgres.yml
+# Provide database.yml as it’s mandatory to run redmine
+install -D -m644 %{SOURCE103} %{buildroot}%{_var}/www/%{name}/config/database.yml
 
 # Add Logrotate script
 mkdir -p %{buildroot}%{_sysconfdir}/logrotate.d/
@@ -246,6 +293,7 @@ install -D -m644 %{SOURCE102} %{buildroot}%{_sysconfdir}/httpd/conf/vhosts.d/%{n
 %files
 %{_sysconfdir}/logrotate.d/%{name}
 %config(noreplace) %{_sysconfdir}/httpd/conf/vhosts.d/%{name}.conf
+%config(noreplace) %{_var}/www/%{name}/config/database.yml
 %doc %{_var}/www/%{name}/README.rdoc
 %doc %{_var}/www/%{name}/CONTRIBUTING.md
 %dir %{_var}/www/%{name}/
@@ -271,11 +319,10 @@ install -D -m644 %{SOURCE102} %{buildroot}%{_sysconfdir}/httpd/conf/vhosts.d/%{n
 %attr(0755,apache,apache) %{_var}/www/%{name}/log/
 %{_var}/www/%{name}/public/
 %{_var}/www/%{name}/Rakefile
-%{_var}/www/%{name}/script/
 %{_var}/www/%{name}/test/
 %attr(0755,apache,apache) %{_var}/www/%{name}/tmp/
 %{_var}/www/%{name}/vendor/
-%{_var}/www/%{name}/Gemfile
+%{_var}/www/%{name}/Gemfile*
 %{_var}/www/%{name}/config.ru
 %{_var}/www/%{name}/config/application.rb
 #{_var}/www/%{name}/config/preinitializer.rb
