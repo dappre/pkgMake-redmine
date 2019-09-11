@@ -1,5 +1,6 @@
 NAME           := redmine
 PACKAGER       := 'Digital-Me Infra Team <infra@digital-me.nl>'
+VENDOR         := 'Digital-Me'
 TARGET_DIR     := $(abspath target)
 DISTS_DIR      := $(TARGET_DIR)/dists
 
@@ -18,14 +19,8 @@ include rpmMake/Makefile
 
 all: rpm
 
-scl:
-	yum -y install centos-release-scl;
-	rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-SIG-SCLo;
-
-rpm_pre: scl
-
-fpm: scl
-	yum -y install rh-ruby23-ruby-devel gcc make rpm-build rubygems;
+fpm:
+	yum -y install rh-ruby23-ruby-devel gcc make rpm-build rh-ruby23-rubygems;
 	scl enable rh-ruby23 -- gem install --no-ri --no-rdoc fpm rake;
 
 rpm_fpm: VERGEMS ?= $(shell scl enable rh-ruby23 -- bundle check --gemfile target/build/BUILD/redmine-$(RPM_VERSION)/Gemfile | grep " \* " | sed -r -e 's/\s\*\s([^ ]+)\s\((.+)\)/\2:\1/g')
