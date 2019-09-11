@@ -15,9 +15,9 @@ Group:          Networking/WWW
 License:        GPLv2+
 URL:            http://www.redmine.org
 Source0:        http://www.redmine.org/releases/#RPM_NAME#-#RPM_VERSION#.tar.gz
-Source101:      %{name}.logrotate
-Source102:      %{name}.apache24
-Source103:      %{name}-database.yml
+Source101:      %{rpm_name}-database.yml
+Source102:      %{rpm_name}.logrotate
+Source103:      %{rpm_name}.apache24
 Requires:       webserver
 Requires:       %{name}-db
 Requires:       %{ruby_pfx}rubygem-rails
@@ -39,15 +39,7 @@ Requires:       %{ruby_pfx}rubygem-rack-openid
 Requires:       %{ruby_pfx}rubygem-rmagick
 Requires:       %{ruby_pfx}rubygem-redcarpet
 
-# Require bundler and deps to package all requires gems
-BuildRequires:  %{ruby_pfx}ruby-devel
-BuildRequires:  %{ruby_pfx}rubygem-bundler
-BuildRequires:  gcc
-BuildRequires:  automake
-BuildRequires:  zlib-devel
-BuildRequires:  ImageMagick-devel
-
-BuildArch:      x86_64
+BuildArch:      noarch
 
 %description
 Redmine is a flexible project management web application. Written using
@@ -78,6 +70,7 @@ Overview
 Summary:        A flexible project management web application - pgsql connector
 Group:          Networking/WWW
 Requires:       %{ruby_pfx}rubygem-pg
+#Requires:       postgresql
 Provides:       %{name}-pg = %{version}-%{release}
 Provides:       %{name}-db = %{version}-%{release}
 
@@ -95,6 +88,7 @@ database backend.
 Summary:        A flexible project management web application - mysql connector
 Group:          Networking/WWW
 Requires:       %{ruby_pfx}rubygem-mysql2
+#Requires:       mariadb
 Provides:       %{name}-mysql = %{version}-%{release}
 Provides:       %{name}-db    = %{version}-%{release}
 
@@ -112,6 +106,7 @@ database backend.
 Summary:        A flexible project management web application - sqlite connector
 Group:          Networking/WWW
 Requires:       %{ruby_pfx}rubygem-sqlite3
+#Requires:       sqlite
 Provides:       %{name}-sqlite = %{version}-%{release}
 Provides:       %{name}-db     = %{version}-%{release}
 
@@ -210,47 +205,10 @@ version control system backend
 
 %files cvs
 #-------------------------------------------------------------------------------
-%package rubygems
-Summary:        A flexible project management web application - cvs backend
-Group:          Networking/WWW
-Requires:       %{ruby_pfx}rubygems
-Provides:       %{ruby_pfx}rubygem-rails
-Provides:       %{ruby_pfx}rubygem-rouge
-Provides:       %{ruby_pfx}rubygem-request_store
-Provides:       %{ruby_pfx}rubygem-mini_mime
-Provides:       %{ruby_pfx}rubygem-actionpack-xml_parser
-Provides:       %{ruby_pfx}rubygem-roadie-rails
-Provides:       %{ruby_pfx}rubygem-mimemagic
-Provides:       %{ruby_pfx}rubygem-mail
-Provides:       %{ruby_pfx}rubygem-csv
-Provides:       %{ruby_pfx}rubygem-nokogiri
-Provides:       %{ruby_pfx}rubygem-i18n
-Provides:       %{ruby_pfx}rubygem-tzinfo-data
-Provides:       %{ruby_pfx}rubygem-rbpdf
-Provides:       %{ruby_pfx}rubygem-net-ldap
-Provides:       %{ruby_pfx}rubygem-ruby-openid
-Provides:       %{ruby_pfx}rubygem-rack-openid
-Provides:       %{ruby_pfx}rubygem-rmagick
-Provides:       %{ruby_pfx}rubygem-redcarpet
-Provides:       %{ruby_pfx}rubygem-pg
-Provides:       %{ruby_pfx}rubygem-mysql2
-Provides:       %{ruby_pfx}rubygem-sqlite3
-
-%description rubygems
-Redmine is a flexible project management web application. Written using
-Ruby on Rails framework, it is cross-platform and cross-database.
-
-This package contains the needed Ruby gems to run the webapp
-
-
-%files rubygems
-%{ruby_dir}/usr/share/gems
-%{ruby_dir}/usr/local/bin
-#-------------------------------------------------------------------------------
 
 
 %prep
-%setup -q
+%setup -q -n %{rpm_name}-%{rpm_version}
 
 # Remove the backup patch files as the install is done with cp *
 rm -f *.00??
@@ -259,18 +217,9 @@ rm -f *.00??
 find . -name ".gitignore" -exec rm {} \;
 find . -name ".hgignore" -exec rm {} \;
 rm -f appveyor.yml
-# Build and install required gems
-pwd
-scl enable %{ruby_scl} -- bundle install --with "ldap openid" --binstubs=./gems-bin  --path=./gems-path
-%{__rm} -rf .bundle
 
 %install
 install -d %{buildroot}%{_var}/www/%{name}
-%{__mkdir} -p %{buildroot}%{ruby_dir}/usr/local
-%{__mkdir} -p %{buildroot}%{ruby_dir}/usr/share
-%{__cp} -rf gems-bin %{buildroot}%{ruby_dir}/usr/local/bin
-%{__cp} -rf gems-path/ruby/* %{buildroot}%{ruby_dir}/usr/share/gems
-%{__rm} -rf gems-bin gems-path .bundle
 %{__cp} -rf * %{buildroot}%{_var}/www/%{name}
 
 # Don’t include bundled rails
@@ -280,15 +229,15 @@ rm -rf %{buildroot}%{_var}/www/%{name}/vendor/rails
 rm -rf %{buildroot}%{_var}/www/%{name}/lib/plugins/rfpdf/lib/fonts/ttf2ufm
 
 # Provide database.yml as it’s mandatory to run redmine
-install -D -m644 %{SOURCE103} %{buildroot}%{_var}/www/%{name}/config/database.yml
+install -D -m644 %{SOURCE101} %{buildroot}%{_var}/www/%{name}/config/database.yml
 
 # Add Logrotate script
 mkdir -p %{buildroot}%{_sysconfdir}/logrotate.d/
-install -D -m644 %{SOURCE101} %{buildroot}%{_sysconfdir}/logrotate.d/%{name}
+install -D -m644 %{SOURCE102} %{buildroot}%{_sysconfdir}/logrotate.d/%{name}
 
 # Add httpd default conf
 mkdir -p %{buildroot}%{_sysconfdir}/httpd/conf.d/
-install -D -m644 %{SOURCE102} %{buildroot}%{_sysconfdir}/httpd/conf/vhosts.d/%{name}.conf
+install -D -m644 %{SOURCE103} %{buildroot}%{_sysconfdir}/httpd/conf/vhosts.d/%{name}.conf
 
 %files
 %{_sysconfdir}/logrotate.d/%{name}

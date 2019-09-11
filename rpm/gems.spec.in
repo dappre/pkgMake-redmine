@@ -1,0 +1,123 @@
+%define rpm_name     #RPM_NAME#
+%define rpm_version  #RPM_VERSION#
+%define rpm_release  #RPM_RELEASE#
+%define rpm_packager #RPM_PACKAGER#
+
+%define ruby_scl    rh-ruby22
+%define ruby_pfx    %{ruby_scl}-
+%define ruby_dir    /opt/rh/%{ruby_scl}/root
+%define gem_bindir  %{ruby_dir}%{_prefix}/local/bin
+%define gem_insdir  %{ruby_dir}%{_datadir}/gems
+%define gem_extdir  %{ruby_dir}%{_libdir}/gems/ruby
+
+Name:           %{rpm_name}-gems
+Version:        %{rpm_version}
+Release:        %{rpm_release}%{?dist}
+Summary:        A flexible project management web application
+Group:          Networking/WWW
+License:        GPLv2+
+URL:            http://www.redmine.org
+Source0:        http://www.redmine.org/releases/#RPM_NAME#-#RPM_VERSION#.tar.gz
+Source101:      %{rpm_name}-database.yml
+Patch1:         %{rpm_name}-Gemfile.patch
+Requires:       %{ruby_pfx}ruby
+Requires:       %{ruby_pfx}rubygems
+Requires:       postgresql
+Requires:       mariadb
+Requires:       sqlite
+Requires:       ImageMagick
+Provides:       %{ruby_pfx}rubygem-rails
+Provides:       %{ruby_pfx}rubygem-rouge
+Provides:       %{ruby_pfx}rubygem-request_store
+Provides:       %{ruby_pfx}rubygem-mini_mime
+Provides:       %{ruby_pfx}rubygem-actionpack-xml_parser
+Provides:       %{ruby_pfx}rubygem-roadie-rails
+Provides:       %{ruby_pfx}rubygem-mimemagic
+Provides:       %{ruby_pfx}rubygem-mail
+Provides:       %{ruby_pfx}rubygem-csv
+Provides:       %{ruby_pfx}rubygem-nokogiri
+Provides:       %{ruby_pfx}rubygem-i18n
+Provides:       %{ruby_pfx}rubygem-tzinfo-data
+Provides:       %{ruby_pfx}rubygem-rbpdf
+Provides:       %{ruby_pfx}rubygem-net-ldap
+Provides:       %{ruby_pfx}rubygem-ruby-openid
+Provides:       %{ruby_pfx}rubygem-rack-openid
+Provides:       %{ruby_pfx}rubygem-rmagick
+Provides:       %{ruby_pfx}rubygem-redcarpet
+Provides:       %{ruby_pfx}rubygem-pg
+Provides:       %{ruby_pfx}rubygem-mysql2
+Provides:       %{ruby_pfx}rubygem-sqlite3
+
+# Require bundler and deps to package all requires gems
+BuildRequires:  %{ruby_pfx}ruby-devel
+BuildRequires:  %{ruby_pfx}rubygem-bundler
+# Require gcc-c++ to avoid rh-devtoolset-x-gcc which provides gcc via scl
+BuildRequires:  gcc-c++
+BuildRequires:  automake
+BuildRequires:  zlib-devel
+BuildRequires:  ImageMagick-devel
+BuildRequires:  mariadb-devel
+BuildRequires:  postgresql-devel
+BuildRequires:  sqlite-devel
+
+BuildArch:      %{_arch}
+
+%description
+Redmine is a flexible project management web application. Written using
+Ruby on Rails framework, it is cross-platform and cross-database.
+
+This package contains the needed Ruby gems to run the webapp
+
+
+%prep
+%setup -q -n %{rpm_name}-%{rpm_version}
+%patch1 -p0
+
+# Remove the backup patch files as the install is done with cp *
+rm -f *.00??
+
+
+%build
+find . -name ".gitignore" -exec rm {} \;
+find . -name ".hgignore" -exec rm {} \;
+rm -f appveyor.yml
+# Build and install required gems
+# Provide database.yml as it’s mandatory to run redmine
+install -D -m644 %{SOURCE101} config/database.yml
+#scl enable %{ruby_scl} -- bundle install --with "ldap openid" --binstubs=./gems-bin  --path=./gems-path
+scl enable %{ruby_scl} -- bundle install --binstubs=./gems-bin  --path=./gems-path
+%{__rm} -rf .bundle
+
+
+%install
+%{__mkdir} -p %{buildroot}%{gem_bindir}
+%{__mkdir} -p %{buildroot}%{gem_insdir}
+%{__mkdir} -p %{buildroot}%{gem_extdir}
+%{__cp} -a gems-bin/* %{buildroot}%{gem_bindir}/
+%{__cp} -a gems-path/ruby/*/* %{buildroot}%{gem_insdir}/
+# Move native lib files to %gem_extdir
+%{__cp} -a %{buildroot}%{gem_insdir}/extensions/x86_64-linux/*/* %{buildroot}%{gem_extdir}/
+
+# Cleanup
+%{__rm} -rf gems-bin gems-path
+%{__rm} -rf %{buildroot}%{gem_extdir}/*/{gem_make.out,mkmf.log}
+%{__rm} -rf %{buildroot}%{gem_insdir}/extensions
+%{__rm} -rf %{buildroot}%{gem_insdir}/gems/*/patches
+%{__rm} -rf %{buildroot}%{gem_insdir}/gems/*/ext
+
+# Remove 32-bit lib from selenium if not needed
+%ifarch x86_64
+find %{buildroot}%{gem_insdir} -wholename "*/native/linux/x86/*.so" -exec rm {} \;
+%endif
+# TODO: wait or PR to compile rbpdf-font-1.19.1/lib/fonts/ttf2ufm/ttf2ufm so it does not require glibc.i686 !
+# See https://github.com/naitoh/rbpdf/issues/31
+
+%files
+%defattr(-,root, root,-)
+%{gem_insdir}
+%{gem_extdir}
+%{gem_bindir}
+
+
+%changelog
+%include %{_specdir}/changelog

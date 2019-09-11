@@ -1,0 +1,14 @@
+--- Gemfile	2019-01-20 06:58:16.000000000 +0000
++++ Gemfile	2019-09-11 21:46:57.912987693 +0000
+@@ -19,6 +19,11 @@
+ gem 'tzinfo-data', platforms: [:mingw, :x64_mingw, :mswin]
+ gem "rbpdf", "~> 1.19.6"
+ 
++gem "nio4r", (RUBY_VERSION >= "2.3" ? "~> 2.5.1" : "~> 2.3.1")
++gem "public_suffix", (RUBY_VERSION >= "2.3" ? "~> 4.0.1" : "~> 3.1.1")
++gem "xpath", (RUBY_VERSION >= "2.3" ? "~> 3.2.0" : "~> 3.1.0")
++gem "childprocess", (RUBY_VERSION >= "2.3" ? "~> 2.0.0" : "~> 1.0.1")
++
+ # Optional gem for LDAP authentication
+ group :ldap do
+   gem "net-ldap", "~> 0.16.0"
