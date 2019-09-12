@@ -15,9 +15,10 @@ RPM_DEBUGINFO   = 0
 
 include rpmMake/Makefile
 
-.PHONY: all scl fpm rpm_fpm
+.PHONY: all check fpm rpm_fpm
 
 all: rpm
+check: rpm_check
 
 fpm:
 	yum -y install rh-ruby23-ruby-devel gcc make rpm-build rh-ruby23-rubygems;
