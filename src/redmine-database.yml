@@ -1,13 +1,9 @@
-# MySQL/MariaDB setup
+# SQLite setup - by default
 production:
-  adapter: mysql2
-  database: redmine
-  host: localhost
-  username: redmine
-  password: redmine
-  encoding: utf8
+  adapter: sqlite3
+  database: db/redmine.sqlite3
 
-# Postgresql setup
+# Postgresql setup - to force required gems to be bundled
 test:
   adapter: postgresql
   database: redmine
@@ -16,7 +12,11 @@ test:
   password: redmine
   encoding: utf8
 
-# SQLite setup
+# MySQL/MariaDB setup - to force required gems to be bundled
 development:
-  adapter: sqlite3
-  database: db/redmine.sqlite3
+  adapter: mysql2
+  database: redmine
+  host: localhost
+  username: redmine
+  password: redmine
+  encoding: utf8

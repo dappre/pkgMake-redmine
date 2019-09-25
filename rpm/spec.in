@@ -3,7 +3,7 @@
 %define rpm_release  #RPM_RELEASE#
 %define rpm_packager #RPM_PACKAGER#
 
-%define ruby_scl    rh-ruby23
+%define ruby_scl    rh-ruby22
 %define ruby_pfx    %{ruby_scl}-
 %define ruby_dir    /opt/rh/%{ruby_scl}/root
 
@@ -222,8 +222,8 @@ rm -f appveyor.yml
 install -d %{buildroot}%{_var}/www/%{name}
 %{__cp} -rf * %{buildroot}%{_var}/www/%{name}
 
-# Don’t include bundled rails
-rm -rf %{buildroot}%{_var}/www/%{name}/vendor/rails
+# Don’t include bundle
+rm -rf %{buildroot}%{_var}/www/%{name}/vendor
 
 # Don't include some prebuilt binaries
 rm -rf %{buildroot}%{_var}/www/%{name}/lib/plugins/rfpdf/lib/fonts/ttf2ufm
@@ -237,11 +237,36 @@ install -D -m644 %{SOURCE102} %{buildroot}%{_sysconfdir}/logrotate.d/%{name}
 
 # Add httpd default conf
 mkdir -p %{buildroot}%{_sysconfdir}/httpd/conf.d/
-install -D -m644 %{SOURCE103} %{buildroot}%{_sysconfdir}/httpd/conf/vhosts.d/%{name}.conf
+install -D -m644 %{SOURCE103} %{buildroot}%{_sysconfdir}/httpd/conf.d/%{name}.conf
+
+
+%post
+pushd %{_var}/www/%{name}
+# Prepare log file if required
+LOG_FILE="log/production.log"
+if [ -n "${LOG_FILE}" -a ! -f "${LOG_FILE}" ]; then
+  touch "${LOG_FILE}"
+  chown nobody:nobody "${LOG_FILE}"
+  chmod 0644 "${LOG_FILE}"
+fi
+# Generate secret token if required
+if [ ! -f "config/initializers/secret_token.rb" ]; then
+  RAILS_ENV=production scl enable %{ruby_scl} -- bundle exec rake generate_secret_token
+fi
+# Should we manage default db and/or schema upgrade from here?
+DB_FILE="db/redmine.sqlite3"
+if [ -n "${DB_FILE}" -a ! -f "${DB_FILE}" ]; then
+  touch "${DB_FILE}"
+  chown nobody:nobody "${DB_FILE}"
+  chmod 0644 "${DB_FILE}"
+fi
+RAILS_ENV=production scl enable %{ruby_scl} -- bundle exec rake db:migrate > /dev/null
+popd
+
 
 %files
 %{_sysconfdir}/logrotate.d/%{name}
-%config(noreplace) %{_sysconfdir}/httpd/conf/vhosts.d/%{name}.conf
+%config(noreplace) %{_sysconfdir}/httpd/conf.d/%{name}.conf
 %config(noreplace) %{_var}/www/%{name}/config/database.yml
 %doc %{_var}/www/%{name}/README.rdoc
 %doc %{_var}/www/%{name}/CONTRIBUTING.md
@@ -256,21 +281,21 @@ install -D -m644 %{SOURCE103} %{buildroot}%{_sysconfdir}/httpd/conf/vhosts.d/%{n
 %{_var}/www/%{name}/config/boot.rb
 %{_var}/www/%{name}/config/environment.rb
 %{_var}/www/%{name}/config/settings.yml
-%{_var}/www/%{name}/db/
+%attr(0755,nobody,nobody) %{_var}/www/%{name}/db/
 %{_var}/www/%{name}/doc/
 %{_var}/www/%{name}/extra/
 # Directory has to be owned by the user under which the webserver runs
 # Since apache is the preferred webserver for many people simplify the
 # process for those users, but it sucks, all webservers should belong
 # to the same user :-(
-%attr(0755,apache,apache) %{_var}/www/%{name}/files/
+%attr(0755,nobody,nobody) %{_var}/www/%{name}/files/
 %{_var}/www/%{name}/lib/
-%attr(0755,apache,apache) %{_var}/www/%{name}/log/
+%attr(0755,nobody,nobody) %{_var}/www/%{name}/log/
 %{_var}/www/%{name}/public/
 %{_var}/www/%{name}/Rakefile
 %{_var}/www/%{name}/test/
-%attr(0755,apache,apache) %{_var}/www/%{name}/tmp/
-%{_var}/www/%{name}/vendor/
+%attr(0755,nobody,nobody) %{_var}/www/%{name}/tmp/
+#%{_var}/www/%{name}/vendor/
 %{_var}/www/%{name}/Gemfile*
 %{_var}/www/%{name}/config.ru
 %{_var}/www/%{name}/config/application.rb
