@@ -28,5 +28,5 @@ rpm_fpm: VERGEMS ?= $(shell scl enable rh-ruby23 -- bundle check --gemfile targe
 rpm_fpm: fpm
 	cp -f src/redmine-database.yml target/build/BUILD/redmine-$(RPM_VERSION)/config/database.yml;
 	cd target/dists;
-	echo $(shell BUNDLE_WITH=ldap scl enable rh-ruby23 -- bundle check --gemfile target/build/BUILD/redmine-$(RPM_VERSION)/Gemfile | grep " \* " | sed -r -e 's/\s\*\s([^ ]+)\s\((.+)\)/\2:\1/g')
+	echo $(shell BUNDLE_WITHOUT="test development" scl enable rh-ruby23 -- bundle check --gemfile target/build/BUILD/redmine-$(RPM_VERSION)/Gemfile | grep " \* " | sed -r -e 's/\s\*\s([^ ]+)\s\((.+)\)/\2:\1/g')
 	$(foreach VERGEM,$(VERGEMS), scl enable rh-ruby23 -- fpm --input-type gem --output-type rpm --force --maintainer "$(RPM_PACKAGER)" --vendor "$(RPM_VENDOR)" --gem-package-name-prefix rh-ruby23-rubygem --iteration $(RELEASE) -v $(subst :, ,$(VERGEM);))
