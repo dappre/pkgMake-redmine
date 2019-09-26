@@ -20,24 +20,7 @@ Source102:      %{rpm_name}.logrotate
 Source103:      %{rpm_name}.apache24
 Requires:       webserver
 Requires:       %{name}-db
-Requires:       %{ruby_pfx}rubygem-rails
-Requires:       %{ruby_pfx}rubygem-rouge
-Requires:       %{ruby_pfx}rubygem-request_store
-Requires:       %{ruby_pfx}rubygem-mini_mime
-Requires:       %{ruby_pfx}rubygem-actionpack-xml_parser
-Requires:       %{ruby_pfx}rubygem-roadie-rails
-Requires:       %{ruby_pfx}rubygem-mimemagic
-Requires:       %{ruby_pfx}rubygem-mail
-Requires:       %{ruby_pfx}rubygem-csv
-Requires:       %{ruby_pfx}rubygem-nokogiri
-Requires:       %{ruby_pfx}rubygem-i18n
-Requires:       %{ruby_pfx}rubygem-tzinfo-data
-Requires:       %{ruby_pfx}rubygem-rbpdf
-Requires:       %{ruby_pfx}rubygem-net-ldap
-Requires:       %{ruby_pfx}rubygem-ruby-openid
-Requires:       %{ruby_pfx}rubygem-rack-openid
-Requires:       %{ruby_pfx}rubygem-rmagick
-Requires:       %{ruby_pfx}rubygem-redcarpet
+Requires:       %{name}-gems
 
 BuildArch:      noarch
 
@@ -69,8 +52,8 @@ Overview
 %package pg
 Summary:        A flexible project management web application - pgsql connector
 Group:          Networking/WWW
-Requires:       %{ruby_pfx}rubygem-pg
-#Requires:       postgresql
+#Requires:       %{ruby_pfx}rubygem-pg
+Requires:       postgresql
 Provides:       %{name}-pg = %{version}-%{release}
 Provides:       %{name}-db = %{version}-%{release}
 
@@ -87,8 +70,8 @@ database backend.
 %package mysql
 Summary:        A flexible project management web application - mysql connector
 Group:          Networking/WWW
-Requires:       %{ruby_pfx}rubygem-mysql2
-#Requires:       mariadb
+#Requires:       %{ruby_pfx}rubygem-mysql2
+Requires:       mariadb
 Provides:       %{name}-mysql = %{version}-%{release}
 Provides:       %{name}-db    = %{version}-%{release}
 
@@ -105,8 +88,8 @@ database backend.
 %package sqlite
 Summary:        A flexible project management web application - sqlite connector
 Group:          Networking/WWW
-Requires:       %{ruby_pfx}rubygem-sqlite3
-#Requires:       sqlite
+#Requires:       %{ruby_pfx}rubygem-sqlite3
+Requires:       sqlite
 Provides:       %{name}-sqlite = %{version}-%{release}
 Provides:       %{name}-db     = %{version}-%{release}
 
@@ -241,7 +224,7 @@ install -D -m644 %{SOURCE103} %{buildroot}%{_sysconfdir}/httpd/conf.d/%{name}.co
 
 
 %post
-pushd %{_var}/www/%{name}
+pushd %{_var}/www/%{name} > /dev/null
 # Prepare log file if required
 LOG_FILE="log/production.log"
 if [ -n "${LOG_FILE}" -a ! -f "${LOG_FILE}" ]; then
@@ -249,9 +232,21 @@ if [ -n "${LOG_FILE}" -a ! -f "${LOG_FILE}" ]; then
   chown nobody:nobody "${LOG_FILE}"
   chmod 0644 "${LOG_FILE}"
 fi
+
+# No clue why it is needed to unfroze - main post script won't find any gem otherwise!
+scl enable %{ruby_scl} -- bundle config --local frozen 0 > /dev/null
+scl enable %{ruby_scl} -- bundle show > /dev/null
+scl enable %{ruby_scl} -- bundle config --local frozen 1 > /dev/null
+
 # Generate secret token if required
 if [ ! -f "config/initializers/secret_token.rb" ]; then
+  echo -n 'Running generate_secret_token task... '
   RAILS_ENV=production scl enable %{ruby_scl} -- bundle exec rake generate_secret_token
+  if [ ${?} -eq 0 ]; then
+    echo 'ok'
+  else
+    echo "error (check logs in $(pwd/log))"
+  fi
 fi
 # Should we manage default db and/or schema upgrade from here?
 DB_FILE="db/redmine.sqlite3"
@@ -260,8 +255,14 @@ if [ -n "${DB_FILE}" -a ! -f "${DB_FILE}" ]; then
   chown nobody:nobody "${DB_FILE}"
   chmod 0644 "${DB_FILE}"
 fi
-RAILS_ENV=production scl enable %{ruby_scl} -- bundle exec rake db:migrate > /dev/null
-popd
+echo -n 'Running db:migrate task... '
+RAILS_ENV=production scl enable %{ruby_scl} -- bundle exec rake db:migrate > /dev/null 2>&1
+if [ ${?} -eq 0 ]; then
+  echo 'ok'
+else
+  echo "error (check logs in $(pwd/log))"
+fi
+popd > /dev/null
 
 
 %files

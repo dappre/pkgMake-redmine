@@ -6,9 +6,9 @@
 %define ruby_scl    rh-ruby22
 %define ruby_pfx    %{ruby_scl}-
 %define ruby_dir    /opt/rh/%{ruby_scl}/root
-%define gem_bindir  %{ruby_dir}%{_prefix}/bin
-%define gem_insdir  %{ruby_dir}%{_datadir}/gems
-%define gem_extdir  %{ruby_dir}%{_libdir}/gems/ruby
+%define gem_bindir  %{_var}/www/%{rpm_name}/vendor/bundle/ruby/bin
+%define gem_insdir  %{_var}/www/%{rpm_name}/vendor/bundle/ruby
+%define gem_extdir  %{_var}/www/%{rpm_name}/vendor/bundle/ruby/extensions/x86_64-linux
 
 Name:           %{rpm_name}-gems
 Version:        %{rpm_version}
@@ -19,42 +19,15 @@ License:        GPLv2+
 URL:            http://www.redmine.org
 Source0:        http://www.redmine.org/releases/#RPM_NAME#-#RPM_VERSION#.tar.gz
 Source101:      %{rpm_name}-database.yml
-Patch1:         %{rpm_name}-Gemfile.patch
+Source102:      %{rpm_name}-Gemfile.local
+Source103:      %{rpm_name}-Gemfile.lock
 Requires:       %{ruby_pfx}ruby
 Requires:       %{ruby_pfx}rubygems
 Requires:       %{ruby_pfx}rubygem-bundler
-Requires:       postgresql
-Requires:       mariadb
-Requires:       sqlite
+#Requires:       postgresql
+#Requires:       mariadb
+#Requires:       sqlite
 Requires:       ImageMagick
-Provides:       %{ruby_pfx}rubygem(rake) = 12.3.3
-Provides:       %{ruby_pfx}rubygem(thor) = 0.20.3
-Provides:       %{ruby_pfx}rubygem(json) = 2.2.0
-Provides:       %{ruby_pfx}rubygem-rake = 12.3.3-%{rpm_release}%{?dist}
-Provides:       %{ruby_pfx}rubygem-thor = 0.20.3-%{rpm_release}%{?dist}
-Provides:       %{ruby_pfx}rubygem-json = 2.2.0-%{rpm_release}%{?dist}
-Provides:       %{ruby_pfx}rubygem-rails
-Provides:       %{ruby_pfx}rubygem-rouge
-Provides:       %{ruby_pfx}rubygem-request_store
-Provides:       %{ruby_pfx}rubygem-mini_mime
-Provides:       %{ruby_pfx}rubygem-actionpack-xml_parser
-Provides:       %{ruby_pfx}rubygem-roadie-rails
-Provides:       %{ruby_pfx}rubygem-mimemagic
-Provides:       %{ruby_pfx}rubygem-mail
-Provides:       %{ruby_pfx}rubygem-csv
-Provides:       %{ruby_pfx}rubygem-nokogiri
-Provides:       %{ruby_pfx}rubygem-i18n
-Provides:       %{ruby_pfx}rubygem-tzinfo-data
-Provides:       %{ruby_pfx}rubygem-rbpdf
-Provides:       %{ruby_pfx}rubygem-net-ldap
-Provides:       %{ruby_pfx}rubygem-ruby-openid
-Provides:       %{ruby_pfx}rubygem-rack-openid
-Provides:       %{ruby_pfx}rubygem-rmagick
-Provides:       %{ruby_pfx}rubygem-redcarpet
-Provides:       %{ruby_pfx}rubygem-pg
-Provides:       %{ruby_pfx}rubygem-mysql2
-Provides:       %{ruby_pfx}rubygem-sqlite3
-Provides:       scl-package(%{ruby_scl})
 
 # Require bundler and deps to package all requires gems
 BuildRequires:  %{ruby_pfx}ruby-devel
@@ -79,7 +52,9 @@ This package contains the needed Ruby gems to run the webapp
 
 %prep
 %setup -q -n %{rpm_name}-%{rpm_version}
-%patch1 -p1
+#%patch1 -p1
+install -D -m644 %{SOURCE102} Gemfile.local
+install -D -m644 %{SOURCE103} Gemfile.lock
 
 # Remove the backup patch files as the install is done with cp *
 rm -f *.00??
@@ -92,34 +67,29 @@ rm -f appveyor.yml
 # Build and install required gems
 # Provide database.yml as it’s mandatory to run redmine
 install -D -m644 %{SOURCE101} config/database.yml
-#scl enable %{ruby_scl} -- bundle config --local without test development
+scl enable %{ruby_scl} -- bundle config --local without test development
 #scl enable %{ruby_scl} -- bundle config --local with ldap openid
-#scl enable %{ruby_scl} -- bundle install --deployment --force --no-cache
-scl enable %{ruby_scl} -- bundle install --binstubs=./gems-bin  --path=./gems-path #--without test development
-%{__rm} -rf .bundle
+#scl enable %{ruby_scl} -- gem install bundler -v "1.17.3"
+scl enable %{ruby_scl} -- bundle package
+scl enable %{ruby_scl} -- bundle install --deployment --local
 
 
 %install
-%{__mkdir} -p %{buildroot}%{gem_bindir}
-%{__mkdir} -p %{buildroot}%{gem_insdir}
-%{__mkdir} -p %{buildroot}%{gem_extdir}
-# Avoid conflict with existing thor bin
-%{__rm} -f gems-bin/thor
-%{__cp} -a gems-bin/* %{buildroot}%{gem_bindir}/
-%{__cp} -a gems-path/ruby/* %{buildroot}%{gem_insdir}/
-# Move native lib files to %gem_extdir
-%{__cp} -a %{buildroot}%{gem_insdir}/extensions/x86_64-linux/* %{buildroot}%{gem_extdir}/
+# Install all gems as a local bundle
+%{__mkdir} -p %{buildroot}%{_var}/www/%{rpm_name}
+%{__cp} -a .bundle vendor %{buildroot}%{_var}/www/%{rpm_name}
 
 # Cleanup
-%{__rm} -rf gems-bin gems-path
 %{__rm} -rf %{buildroot}%{gem_extdir}/*/{gem_make.out,mkmf.log}
-%{__rm} -rf %{buildroot}%{gem_insdir}/extensions
 %{__rm} -rf %{buildroot}%{gem_insdir}/gems/*/patches
-%{__rm} -rf %{buildroot}%{gem_insdir}/gems/*/ext
+%{__rm} -rf %{buildroot}%{gem_insdir}/build_info
+%{__rm} -rf %{buildroot}%{gem_insdir}/cache
+%{__rm} -rf %{buildroot}%{gem_insdir}/doc
+%{__rm} -rf %{buildroot}%{gem_insdir}/cache %{buildroot}%{_var}/www/%{rpm_name}/vendor/cache
 
 # Remove 32-bit lib from selenium if not needed
 %ifarch x86_64
-find %{buildroot}%{gem_insdir} -wholename "*/native/linux/x86/*.so" -exec rm {} \;
+  find %{buildroot}%{gem_insdir} -wholename "*/native/linux/x86/*.so" -exec rm {} \;
 %endif
 # TODO: wait or PR to compile rbpdf-font-1.19.1/lib/fonts/ttf2ufm/ttf2ufm so it does not require glibc.i686 !
 # See https://github.com/naitoh/rbpdf/issues/31
@@ -127,9 +97,11 @@ find %{buildroot}%{gem_insdir} -wholename "*/native/linux/x86/*.so" -exec rm {} 
 
 %files
 %defattr(-,root, root,-)
-%{gem_insdir}/*
+%{gem_insdir}/gems/*
+%{gem_insdir}/specifications/*
 %{gem_extdir}/*
 %{gem_bindir}/*
+%{_var}/www/%{rpm_name}/.bundle
 
 
 %changelog

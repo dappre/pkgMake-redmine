@@ -2,21 +2,3 @@
 production:
   adapter: sqlite3
   database: db/redmine.sqlite3
-
-# Postgresql setup - to force required gems to be bundled
-test:
-  adapter: postgresql
-  database: redmine
-  host: localhost
-  username: redmine
-  password: redmine
-  encoding: utf8
-
-# MySQL/MariaDB setup - to force required gems to be bundled
-development:
-  adapter: mysql2
-  database: redmine
-  host: localhost
-  username: redmine
-  password: redmine
-  encoding: utf8
