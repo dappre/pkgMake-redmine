@@ -1,0 +1,8 @@
+# MySQL2 configuration example
+production:
+  adapter: mysql2
+  database: redmine
+  host: localhost
+  username: root
+  password: ""
+  encoding: utf8

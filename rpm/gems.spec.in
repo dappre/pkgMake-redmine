@@ -18,7 +18,7 @@ Group:          Networking/WWW
 License:        GPLv2+
 URL:            http://www.redmine.org
 Source0:        http://www.redmine.org/releases/#RPM_NAME#-#RPM_VERSION#.tar.gz
-Source101:      %{rpm_name}-database.yml
+Source101:      %{rpm_name}-database.yml.sqlite3
 Source102:      %{rpm_name}-Gemfile.local
 Source103:      %{rpm_name}-Gemfile.lock
 Requires:       %{ruby_pfx}ruby
@@ -72,7 +72,7 @@ scl enable %{ruby_scl} -- bundle config --local without test development
 #scl enable %{ruby_scl} -- gem install bundler -v "1.17.3"
 scl enable %{ruby_scl} -- bundle package
 scl enable %{ruby_scl} -- bundle install --deployment --local
-
+rm -f config/database.yml
 
 %install
 # Install all gems as a local bundle

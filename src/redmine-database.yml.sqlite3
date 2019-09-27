@@ -1,4 +1,4 @@
-# SQLite setup - by default
+# SQLite3 configuration example
 production:
   adapter: sqlite3
   database: db/redmine.sqlite3

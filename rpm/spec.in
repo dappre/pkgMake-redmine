@@ -15,9 +15,11 @@ Group:          Networking/WWW
 License:        GPLv2+
 URL:            http://www.redmine.org
 Source0:        http://www.redmine.org/releases/#RPM_NAME#-#RPM_VERSION#.tar.gz
-Source101:      %{rpm_name}-database.yml
-Source102:      %{rpm_name}.logrotate
-Source103:      %{rpm_name}.apache24
+Source101:      %{rpm_name}-database.yml.sqlite3
+Source102:      %{rpm_name}-database.yml.mysql2
+Source103:      %{rpm_name}-database.yml.postgresql
+Source104:      %{rpm_name}.logrotate
+Source105:      %{rpm_name}.apache
 Requires:       webserver
 Requires:       %{name}-db
 Requires:       %{name}-gems
@@ -52,8 +54,8 @@ Overview
 %package pg
 Summary:        A flexible project management web application - pgsql connector
 Group:          Networking/WWW
-#Requires:       %{ruby_pfx}rubygem-pg
 Requires:       postgresql
+Requires:       %{name}-gems   = %{version}-%{release}
 Provides:       %{name}-pg = %{version}-%{release}
 Provides:       %{name}-db = %{version}-%{release}
 
@@ -65,13 +67,23 @@ This package contains the needed modules to use postgresql as redmine's
 database backend.
 
 
+%post pg
+pushd %{_var}/www/%{name} > /dev/null
+
+# Configure db if required
+DB_CONF='config/database.yml'
+[ -s "${DB_CONF}" ] || cp -af "${DB_CONF}.postgresql" "${DB_CONF}"
+popd > /dev/null
+
+
 %files pg
+%{_var}/www/%{name}/config/database.yml.postgresql
 #-------------------------------------------------------------------------------
 %package mysql
 Summary:        A flexible project management web application - mysql connector
 Group:          Networking/WWW
-#Requires:       %{ruby_pfx}rubygem-mysql2
 Requires:       mariadb
+Requires:       %{name}-gems   = %{version}-%{release}
 Provides:       %{name}-mysql = %{version}-%{release}
 Provides:       %{name}-db    = %{version}-%{release}
 
@@ -83,13 +95,23 @@ This package contains the needed modules to use mysql as redmine's
 database backend.
 
 
+%post mysql
+pushd %{_var}/www/%{name} > /dev/null
+
+# Configure db if required
+DB_CONF='config/database.yml'
+[ -s "${DB_CONF}" ] || cp -af "${DB_CONF}.mysql2" "${DB_CONF}"
+popd > /dev/null
+
+
 %files mysql
+%{_var}/www/%{name}/config/database.yml.mysql2
 #-------------------------------------------------------------------------------
 %package sqlite
 Summary:        A flexible project management web application - sqlite connector
 Group:          Networking/WWW
-#Requires:       %{ruby_pfx}rubygem-sqlite3
 Requires:       sqlite
+Requires:       %{name}-gems   = %{version}-%{release}
 Provides:       %{name}-sqlite = %{version}-%{release}
 Provides:       %{name}-db     = %{version}-%{release}
 
@@ -101,7 +123,17 @@ This package contains the needed modules to use sqlite as redmine's
 database backend.
 
 
+%post sqlite
+pushd %{_var}/www/%{name} > /dev/null
+
+# Configure db if required
+DB_CONF='config/database.yml'
+[ -s "${DB_CONF}" ] || cp -af "${DB_CONF}.sqlite3" "${DB_CONF}"
+popd > /dev/null
+
+
 %files sqlite
+%{_var}/www/%{name}/config/database.yml.sqlite3
 #-------------------------------------------------------------------------------
 %package git
 Summary:        A flexible project management web application - git backend
@@ -211,20 +243,28 @@ rm -rf %{buildroot}%{_var}/www/%{name}/vendor
 # Don't include some prebuilt binaries
 rm -rf %{buildroot}%{_var}/www/%{name}/lib/plugins/rfpdf/lib/fonts/ttf2ufm
 
-# Provide database.yml as it’s mandatory to run redmine
-install -D -m644 %{SOURCE101} %{buildroot}%{_var}/www/%{name}/config/database.yml
+# Provide DB configs
+install -D -m644 %{SOURCE101} %{buildroot}%{_var}/www/%{name}/config/database.yml.sqlite3
+install -D -m644 %{SOURCE102} %{buildroot}%{_var}/www/%{name}/config/database.yml.mysql2
+install -D -m644 %{SOURCE103} %{buildroot}%{_var}/www/%{name}/config/database.yml.postgresql
+# Including a empty default one
+#touch %{buildroot}%{_var}/www/%{name}/config/database.yml
 
 # Add Logrotate script
 mkdir -p %{buildroot}%{_sysconfdir}/logrotate.d/
-install -D -m644 %{SOURCE102} %{buildroot}%{_sysconfdir}/logrotate.d/%{name}
+install -D -m644 %{SOURCE104} %{buildroot}%{_sysconfdir}/logrotate.d/%{name}
 
 # Add httpd default conf
 mkdir -p %{buildroot}%{_sysconfdir}/httpd/conf.d/
-install -D -m644 %{SOURCE103} %{buildroot}%{_sysconfdir}/httpd/conf.d/%{name}.conf
+install -D -m644 %{SOURCE105} %{buildroot}%{_sysconfdir}/httpd/conf.d/%{name}.conf
+
+# Add an empty log file to setup the correct permissions
+#touch %{buildroot}%{_var}/www/%{name}/log/production.log
 
 
 %post
 pushd %{_var}/www/%{name} > /dev/null
+
 # Prepare log file if required
 LOG_FILE="log/production.log"
 if [ -n "${LOG_FILE}" -a ! -f "${LOG_FILE}" ]; then
@@ -241,26 +281,34 @@ scl enable %{ruby_scl} -- bundle config --local frozen 1 > /dev/null
 # Generate secret token if required
 if [ ! -f "config/initializers/secret_token.rb" ]; then
   echo -n 'Running generate_secret_token task... '
-  RAILS_ENV=production scl enable %{ruby_scl} -- bundle exec rake generate_secret_token
+  RAILS_ENV=production scl enable %{ruby_scl} -- bundle exec rake generate_secret_token > /dev/null 2>&1
   if [ ${?} -eq 0 ]; then
     echo 'ok'
   else
-    echo "error (check logs in $(pwd/log))"
+    echo "error (check logs in $(pwd)/log)"
   fi
 fi
-# Should we manage default db and/or schema upgrade from here?
-DB_FILE="db/redmine.sqlite3"
-if [ -n "${DB_FILE}" -a ! -f "${DB_FILE}" ]; then
+
+# Create default db file if required
+DB_CONF='config/database.yml'
+DB_ADAPTER="$(sed -n -r -e '/^production:/,/^$/ { s/^\s+adapter:\s*(.+)$/\1/ p }' "${DB_CONF}")"
+DB_FILE="$(sed -n -r -e '/^production:/,/^$/ { s/^\s+database:\s*(.+)$/\1/ p }' "${DB_CONF}")"
+DB_DIR="$(dirname "${DB_FILE}")"
+
+if [ "${DB_ADAPTER}" = 'sqlite3' -a -n "${DB_FILE}" -a ! -f "${DB_FILE}" ]; then
+  [ -d "${DB_DIR}" ] || { mkdir -p "${DB_DIR}" && chown nobody:nobody "${DB_DIR}" && chmod 0755 "${DB_DIR}"; }
   touch "${DB_FILE}"
   chown nobody:nobody "${DB_FILE}"
   chmod 0644 "${DB_FILE}"
 fi
+
+# Initialize or migrate the DB
 echo -n 'Running db:migrate task... '
 RAILS_ENV=production scl enable %{ruby_scl} -- bundle exec rake db:migrate > /dev/null 2>&1
 if [ ${?} -eq 0 ]; then
   echo 'ok'
 else
-  echo "error (check logs in $(pwd/log))"
+  echo "error (check logs in $(pwd)/log)"
 fi
 popd > /dev/null
 
@@ -268,7 +316,7 @@ popd > /dev/null
 %files
 %{_sysconfdir}/logrotate.d/%{name}
 %config(noreplace) %{_sysconfdir}/httpd/conf.d/%{name}.conf
-%config(noreplace) %{_var}/www/%{name}/config/database.yml
+#%config(noreplace) %{_var}/www/%{name}/config/database.yml
 %doc %{_var}/www/%{name}/README.rdoc
 %doc %{_var}/www/%{name}/CONTRIBUTING.md
 %dir %{_var}/www/%{name}/
@@ -289,13 +337,16 @@ popd > /dev/null
 # Since apache is the preferred webserver for many people simplify the
 # process for those users, but it sucks, all webservers should belong
 # to the same user :-(
-%attr(0755,nobody,nobody) %{_var}/www/%{name}/files/
+%attr(0755,nobody,nobody) %dir %{_var}/www/%{name}/files/
+%attr(0644,nobody,nobody) %{_var}/www/%{name}/files/*
 %{_var}/www/%{name}/lib/
-%attr(0755,nobody,nobody) %{_var}/www/%{name}/log/
+%attr(0755,nobody,nobody) %dir %{_var}/www/%{name}/log/
+%attr(0644,nobody,nobody) %{_var}/www/%{name}/log/*
 %{_var}/www/%{name}/public/
 %{_var}/www/%{name}/Rakefile
 %{_var}/www/%{name}/test/
-%attr(0755,nobody,nobody) %{_var}/www/%{name}/tmp/
+%attr(0755,nobody,nobody) %dir %{_var}/www/%{name}/tmp/
+%attr(0755,nobody,nobody) %{_var}/www/%{name}/tmp/*
 #%{_var}/www/%{name}/vendor/
 %{_var}/www/%{name}/Gemfile*
 %{_var}/www/%{name}/config.ru
