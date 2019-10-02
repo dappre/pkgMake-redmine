@@ -149,7 +149,14 @@ DISTS_DIR=\$(pwd)/${env.TARGET_DIR}/dists/${env.LAZY_LABEL} \
 LOG_FILE=/dev/stdout
 """
 			)
-			sh("sudo yum -y install \$(pwd)/${env.TARGET_DIR}/dists/${env.LAZY_LABEL}/*.rpm")
+			sh(
+"""
+cd ${env.TARGET_DIR}/dists/${env.LAZY_LABEL}
+sudo yum -y install redmine-${version}-${release}.*.rpm \
+ redmine-gems-${version}-${release}.*.rpm \
+ redmine-sqlite-${version}-${release}.*.rpm
+"""
+			)
 		},
 		in: '*', on: 'docker',
 	]
