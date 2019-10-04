@@ -54,8 +54,7 @@ Overview
 %package pg
 Summary:        A flexible project management web application - pgsql connector
 Group:          Networking/WWW
-Requires:       postgresql
-Requires:       %{name}-gems   = %{version}-%{release}
+Requires:       %{name}-gems-pg   = %{version}-%{release}
 Provides:       %{name}-pg = %{version}-%{release}
 Provides:       %{name}-db = %{version}-%{release}
 
@@ -82,8 +81,7 @@ popd > /dev/null
 %package mysql
 Summary:        A flexible project management web application - mysql connector
 Group:          Networking/WWW
-Requires:       mariadb
-Requires:       %{name}-gems   = %{version}-%{release}
+Requires:       %{name}-gems-mysql   = %{version}-%{release}
 Provides:       %{name}-mysql = %{version}-%{release}
 Provides:       %{name}-db    = %{version}-%{release}
 
@@ -110,8 +108,7 @@ popd > /dev/null
 %package sqlite
 Summary:        A flexible project management web application - sqlite connector
 Group:          Networking/WWW
-Requires:       sqlite
-Requires:       %{name}-gems   = %{version}-%{release}
+Requires:       %{name}-gems-sqlite   = %{version}-%{release}
 Provides:       %{name}-sqlite = %{version}-%{release}
 Provides:       %{name}-db     = %{version}-%{release}
 

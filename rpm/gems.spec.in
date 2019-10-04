@@ -13,7 +13,7 @@
 Name:           %{rpm_name}-gems
 Version:        %{rpm_version}
 Release:        %{rpm_release}%{?dist}
-Summary:        A flexible project management web application
+Summary:        A flexible project management web application - Ruby gems
 Group:          Networking/WWW
 License:        GPLv2+
 URL:            http://www.redmine.org
@@ -48,6 +48,72 @@ Redmine is a flexible project management web application. Written using
 Ruby on Rails framework, it is cross-platform and cross-database.
 
 This package contains the needed Ruby gems to run the webapp
+
+
+#-------------------------------------------------------------------------------
+%package pg
+Summary:        A flexible project management web application - Ruby gems pgsql connector
+Group:          Networking/WWW
+Requires:       postgresql
+Requires:       %{rpm_name}-gems    = %{version}-%{release}
+Provides:       %{rpm_name}-gems-pg = %{version}-%{release}
+
+%description pg
+Redmine is a flexible project management web application. Written using
+Ruby on Rails framework, it is cross-platform and cross-database.
+
+This package contains the needed Ruby gems to use postgresql as redmine's
+database backend.
+
+
+%files pg
+%defattr(-,root, root,-)
+%{gem_insdir}/gems/pg-*
+%{gem_insdir}/specifications/pg-*
+%{gem_extdir}/pg-*
+#-------------------------------------------------------------------------------
+%package mysql
+Summary:        A flexible project management web application - Ruby gems mysql connector
+Group:          Networking/WWW
+Requires:       mariadb
+Requires:       %{rpm_name}-gems       = %{version}-%{release}
+Provides:       %{rpm_name}-gems-mysql = %{version}-%{release}
+
+%description mysql
+Redmine is a flexible project management web application. Written using
+Ruby on Rails framework, it is cross-platform and cross-database.
+
+This package contains the needed Ruby gems to use mysql as redmine's
+database backend.
+
+
+%files mysql
+%defattr(-,root, root,-)
+%{gem_insdir}/gems/mysql2-*
+%{gem_insdir}/specifications/mysql2-*
+%{gem_extdir}/mysql2-*
+#-------------------------------------------------------------------------------
+%package sqlite
+Summary:        A flexible project management web application - Ruby gems sqlite connector
+Group:          Networking/WWW
+Requires:       sqlite
+Requires:       %{rpm_name}-gems        = %{version}-%{release}
+Provides:       %{rpm_name}-gems-sqlite = %{version}-%{release}
+
+%description sqlite
+Redmine is a flexible project management web application. Written using
+Ruby on Rails framework, it is cross-platform and cross-database.
+
+This package contains the needed Ruby gems to use sqlite as redmine's
+database backend.
+
+
+%files sqlite
+%defattr(-,root, root,-)
+%{gem_insdir}/gems/sqlite3-*
+%{gem_insdir}/specifications/sqlite3-*
+%{gem_extdir}/sqlite3-*
+#-------------------------------------------------------------------------------
 
 
 %prep
