@@ -222,30 +222,33 @@ version control system backend
 %prep
 %setup -q -n %{rpm_name}-%{rpm_version}
 
-# Remove the backup patch files as the install is done with cp *
-rm -f *.00??
+# Cleanup
+find . -name "delete.me" -exec rm {} \;
+find . -name "empty" -exec rm {} \;
+find . -name ".hgignore" -exec rm {} \;
+find . -name ".gitignore" -exec rm {} \;
+find . -name ".gitkeep" -exec rm {} \;
+%{__rm} -rf .github
+%{__rm} -rf test
+%{__rm} -f appveyor.yml
+
 
 %build
-find . -name ".gitignore" -exec rm {} \;
-find . -name ".hgignore" -exec rm {} \;
-rm -f appveyor.yml
+# Nothing to build here
+
 
 %install
 install -d %{buildroot}%{_var}/www/%{name}
 %{__cp} -rf * %{buildroot}%{_var}/www/%{name}
 
-# Don’t include bundle
-rm -rf %{buildroot}%{_var}/www/%{name}/vendor
-
-# Don't include some prebuilt binaries
-rm -rf %{buildroot}%{_var}/www/%{name}/lib/plugins/rfpdf/lib/fonts/ttf2ufm
+# Don’t include bundle and Gemfiles
+%{__rm} -rf %{buildroot}%{_var}/www/%{name}/vendor
+%{__rm} -rf %{buildroot}%{_var}/www/%{name}/Gemfile*
 
 # Provide DB configs
 install -D -m644 %{SOURCE101} %{buildroot}%{_var}/www/%{name}/config/database.yml.sqlite3
 install -D -m644 %{SOURCE102} %{buildroot}%{_var}/www/%{name}/config/database.yml.mysql2
 install -D -m644 %{SOURCE103} %{buildroot}%{_var}/www/%{name}/config/database.yml.postgresql
-# Including a empty default one
-#touch %{buildroot}%{_var}/www/%{name}/config/database.yml
 
 # Add Logrotate script
 mkdir -p %{buildroot}%{_sysconfdir}/logrotate.d/
@@ -254,9 +257,6 @@ install -D -m644 %{SOURCE104} %{buildroot}%{_sysconfdir}/logrotate.d/%{name}
 # Add httpd default conf
 mkdir -p %{buildroot}%{_sysconfdir}/httpd/conf.d/
 install -D -m644 %{SOURCE105} %{buildroot}%{_sysconfdir}/httpd/conf.d/%{name}.conf
-
-# Add an empty log file to setup the correct permissions
-#touch %{buildroot}%{_var}/www/%{name}/log/production.log
 
 
 %post
@@ -311,44 +311,35 @@ popd > /dev/null
 
 
 %files
+%defattr(-,root, root,-)
 %{_sysconfdir}/logrotate.d/%{name}
 %config(noreplace) %{_sysconfdir}/httpd/conf.d/%{name}.conf
-#%config(noreplace) %{_var}/www/%{name}/config/database.yml
+%ghost %config(noreplace) %{_var}/www/%{name}/config/database.yml
 %doc %{_var}/www/%{name}/README.rdoc
 %doc %{_var}/www/%{name}/CONTRIBUTING.md
 %dir %{_var}/www/%{name}/
 %{_var}/www/%{name}/app/
 %dir %{_var}/www/%{name}/config/
 %doc %{_var}/www/%{name}/config/*.example
-%{_var}/www/%{name}/config/environments/
-%{_var}/www/%{name}/config/locales/
-%{_var}/www/%{name}/config/initializers/
-%{_var}/www/%{name}/config/routes.rb
+%{_var}/www/%{name}/config.ru
+%{_var}/www/%{name}/config/application.rb
 %{_var}/www/%{name}/config/boot.rb
 %{_var}/www/%{name}/config/environment.rb
-%{_var}/www/%{name}/config/settings.yml
+%{_var}/www/%{name}/config/environments/
+%{_var}/www/%{name}/config/initializers/
+%{_var}/www/%{name}/config/locales/
+%{_var}/www/%{name}/config/routes.rb
+%config(noreplace) %{_var}/www/%{name}/config/settings.yml
 %attr(0755,nobody,nobody) %{_var}/www/%{name}/db/
 %{_var}/www/%{name}/doc/
 %{_var}/www/%{name}/extra/
-# Directory has to be owned by the user under which the webserver runs
-# Since apache is the preferred webserver for many people simplify the
-# process for those users, but it sucks, all webservers should belong
-# to the same user :-(
 %attr(0755,nobody,nobody) %dir %{_var}/www/%{name}/files/
-%attr(0644,nobody,nobody) %{_var}/www/%{name}/files/*
 %{_var}/www/%{name}/lib/
 %attr(0755,nobody,nobody) %dir %{_var}/www/%{name}/log/
-%attr(0644,nobody,nobody) %{_var}/www/%{name}/log/*
 %{_var}/www/%{name}/public/
 %{_var}/www/%{name}/Rakefile
-%{_var}/www/%{name}/test/
 %attr(0755,nobody,nobody) %dir %{_var}/www/%{name}/tmp/
-%attr(0755,nobody,nobody) %{_var}/www/%{name}/tmp/*
-#%{_var}/www/%{name}/vendor/
-%{_var}/www/%{name}/Gemfile*
-%{_var}/www/%{name}/config.ru
-%{_var}/www/%{name}/config/application.rb
-#{_var}/www/%{name}/config/preinitializer.rb
+%attr(0755,nobody,nobody) %dir %{_var}/www/%{name}/tmp/*
 %{_var}/www/%{name}/plugins/README
 %{_var}/www/%{name}/bin/
 
