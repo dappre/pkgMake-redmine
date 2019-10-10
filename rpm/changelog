@@ -5,3 +5,4 @@
 - Bundle all required gems in 4 separated packages
 - Provide config examples for each databases
 - Run token and migrate rake tasks in post script
+- Use standard directories for config, db, lib, log and tmp
