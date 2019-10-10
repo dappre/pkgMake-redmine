@@ -1,5 +1,2 @@
-target
-yum-*
-rpm-tmp.*
-*.log
-.project
+/target/
+/*.log
