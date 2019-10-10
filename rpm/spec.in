@@ -6,6 +6,12 @@
 %define ruby_scl    rh-ruby22
 %define ruby_pfx    %{ruby_scl}-
 %define ruby_dir    /opt/rh/%{ruby_scl}/root
+%define app_root    %{_var}/www/%{rpm_name}
+%define app_bindir  %{app_root}/bin
+%define app_etcdir  %{_sysconfdir}/%{rpm_name}
+%define app_libdir  %{_var}/lib/%{rpm_name}
+%define app_logdir  %{_var}/log/%{rpm_name}
+%define app_tmpdir  %{_var}/tmp/%{rpm_name}
 
 Name:           %{rpm_name}
 Version:        %{rpm_version}
@@ -67,16 +73,16 @@ database backend.
 
 
 %post pg
-pushd %{_var}/www/%{name} > /dev/null
+pushd %{app_etcdir} > /dev/null
 
 # Configure db if required
-DB_CONF='config/database.yml'
+DB_CONF='database.yml'
 [ -s "${DB_CONF}" ] || cp -af "${DB_CONF}.postgresql" "${DB_CONF}"
 popd > /dev/null
 
 
 %files pg
-%{_var}/www/%{name}/config/database.yml.postgresql
+%{app_etcdir}/database.yml.postgresql
 #-------------------------------------------------------------------------------
 %package mysql
 Summary:        A flexible project management web application - mysql connector
@@ -94,16 +100,16 @@ database backend.
 
 
 %post mysql
-pushd %{_var}/www/%{name} > /dev/null
+pushd %{app_etcdir} > /dev/null
 
 # Configure db if required
-DB_CONF='config/database.yml'
+DB_CONF='database.yml'
 [ -s "${DB_CONF}" ] || cp -af "${DB_CONF}.mysql2" "${DB_CONF}"
 popd > /dev/null
 
 
 %files mysql
-%{_var}/www/%{name}/config/database.yml.mysql2
+%{app_etcdir}/database.yml.mysql2
 #-------------------------------------------------------------------------------
 %package sqlite
 Summary:        A flexible project management web application - sqlite connector
@@ -121,16 +127,16 @@ database backend.
 
 
 %post sqlite
-pushd %{_var}/www/%{name} > /dev/null
+pushd %{app_etcdir} > /dev/null
 
 # Configure db if required
-DB_CONF='config/database.yml'
+DB_CONF='database.yml'
 [ -s "${DB_CONF}" ] || cp -af "${DB_CONF}.sqlite3" "${DB_CONF}"
 popd > /dev/null
 
 
 %files sqlite
-%{_var}/www/%{name}/config/database.yml.sqlite3
+%{app_etcdir}/database.yml.sqlite3
 #-------------------------------------------------------------------------------
 %package git
 Summary:        A flexible project management web application - git backend
@@ -230,6 +236,8 @@ find . -name ".gitignore" -exec rm {} \;
 find . -name ".gitkeep" -exec rm {} \;
 %{__rm} -rf .github
 %{__rm} -rf test
+%{__rm} -f config/environments/development.rb
+%{__rm} -f config/environments/test*.rb
 %{__rm} -f appveyor.yml
 
 
@@ -238,17 +246,33 @@ find . -name ".gitkeep" -exec rm {} \;
 
 
 %install
-install -d %{buildroot}%{_var}/www/%{name}
-%{__cp} -rf * %{buildroot}%{_var}/www/%{name}
-
-# Don’t include bundle and Gemfiles
-%{__rm} -rf %{buildroot}%{_var}/www/%{name}/vendor
-%{__rm} -rf %{buildroot}%{_var}/www/%{name}/Gemfile*
+install -d %{buildroot}%{app_root}
+%{__mkdir} -p %{buildroot}/{%{app_etcdir},%{app_libdir},%{app_logdir},%{app_tmpdir}}
+%{__cp} -rf config/* %{buildroot}%{app_etcdir}
+%{__cp} -rf db %{buildroot}%{app_libdir}
+%{__cp} -rf files %{buildroot}%{app_libdir}
+%{__cp} -rf tmp/* %{buildroot}%{app_tmpdir}
+%{__cp} -rf * %{buildroot}%{app_root}
 
 # Provide DB configs
-install -D -m644 %{SOURCE101} %{buildroot}%{_var}/www/%{name}/config/database.yml.sqlite3
-install -D -m644 %{SOURCE102} %{buildroot}%{_var}/www/%{name}/config/database.yml.mysql2
-install -D -m644 %{SOURCE103} %{buildroot}%{_var}/www/%{name}/config/database.yml.postgresql
+install -D -m644 %{SOURCE101} %{buildroot}%{app_etcdir}/database.yml.sqlite3
+install -D -m644 %{SOURCE102} %{buildroot}%{app_etcdir}/database.yml.mysql2
+install -D -m644 %{SOURCE103} %{buildroot}%{app_etcdir}/database.yml.postgresql
+
+# Replace empty folders with sym links
+pushd %{buildroot}%{app_root}
+%{__rm} -rf {config,db,files,log,tmp}
+ln -s %{app_etcdir} config
+ln -s %{app_libdir}/db db
+ln -s %{app_libdir}/files files
+ln -s %{app_logdir} log
+ln -s %{app_tmpdir} tmp
+popd
+
+# Don’t include bundle and Gemfiles
+%{__rm} -rf %{buildroot}%{app_root}/vendor
+%{__rm} -rf %{buildroot}%{app_root}/Gemfile*
+
 
 # Add Logrotate script
 mkdir -p %{buildroot}%{_sysconfdir}/logrotate.d/
@@ -260,7 +284,7 @@ install -D -m644 %{SOURCE105} %{buildroot}%{_sysconfdir}/httpd/conf.d/%{name}.co
 
 
 %post
-pushd %{_var}/www/%{name} > /dev/null
+pushd %{app_root} > /dev/null
 
 # Prepare log file if required
 LOG_FILE="log/production.log"
@@ -310,38 +334,50 @@ fi
 popd > /dev/null
 
 
+%postun
+# Remove what's left, mostly vendor/bundle/...
+%{__rm} -rf %{app_root}
+
+
 %files
 %defattr(-,root, root,-)
 %{_sysconfdir}/logrotate.d/%{name}
 %config(noreplace) %{_sysconfdir}/httpd/conf.d/%{name}.conf
-%ghost %config(noreplace) %{_var}/www/%{name}/config/database.yml
-%doc %{_var}/www/%{name}/README.rdoc
-%doc %{_var}/www/%{name}/CONTRIBUTING.md
-%dir %{_var}/www/%{name}/
-%{_var}/www/%{name}/app/
-%dir %{_var}/www/%{name}/config/
-%doc %{_var}/www/%{name}/config/*.example
-%{_var}/www/%{name}/config.ru
-%{_var}/www/%{name}/config/application.rb
-%{_var}/www/%{name}/config/boot.rb
-%{_var}/www/%{name}/config/environment.rb
-%{_var}/www/%{name}/config/environments/
-%{_var}/www/%{name}/config/initializers/
-%{_var}/www/%{name}/config/locales/
-%{_var}/www/%{name}/config/routes.rb
-%config(noreplace) %{_var}/www/%{name}/config/settings.yml
-%attr(0755,nobody,nobody) %{_var}/www/%{name}/db/
-%{_var}/www/%{name}/doc/
-%{_var}/www/%{name}/extra/
-%attr(0755,nobody,nobody) %dir %{_var}/www/%{name}/files/
-%{_var}/www/%{name}/lib/
-%attr(0755,nobody,nobody) %dir %{_var}/www/%{name}/log/
-%{_var}/www/%{name}/public/
-%{_var}/www/%{name}/Rakefile
-%attr(0755,nobody,nobody) %dir %{_var}/www/%{name}/tmp/
-%attr(0755,nobody,nobody) %dir %{_var}/www/%{name}/tmp/*
-%{_var}/www/%{name}/plugins/README
-%{_var}/www/%{name}/bin/
+%ghost %config(noreplace) %{app_etcdir}/database.yml
+%doc %{app_root}/README.rdoc
+%doc %{app_root}/CONTRIBUTING.md
+%{app_root}/app/
+%dir %{app_etcdir}/
+%doc %{app_etcdir}/*.example
+%{app_etcdir}/application.rb
+%{app_etcdir}/boot.rb
+%{app_etcdir}/environment.rb
+%{app_etcdir}/environments/
+%{app_etcdir}/initializers/
+%{app_etcdir}/locales/
+%{app_etcdir}/routes.rb
+%config(noreplace) %{app_etcdir}/settings.yml
+%attr(0755,nobody,nobody) %dir %{app_libdir}/db/
+%{app_libdir}/db/*
+%attr(0755,nobody,nobody) %dir %{app_libdir}/files/
+%attr(0755,nobody,nobody) %dir %{app_logdir}/
+%attr(0755,nobody,nobody) %dir %{app_tmpdir}/
+%attr(0755,nobody,nobody) %dir %{app_tmpdir}/*
+%dir %{app_root}/
+%{app_root}/bin/
+%{app_root}/config
+%{app_root}/config.ru
+%{app_root}/db
+%{app_root}/doc/
+%{app_root}/extra/
+%{app_root}/files
+%{app_root}/log
+%{app_root}/lib/
+%{app_root}/plugins/
+%{app_root}/public/
+%{app_root}/Rakefile
+%{app_root}/tmp
+
 
 %changelog
 %include %{_specdir}/changelog

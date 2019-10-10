@@ -240,7 +240,10 @@ sed -r -e '/\/(mysql2|pg|sqlite3)-[.0-9]+(\.gemspec)?$/ d' -i gems.lst
 %defattr(-,root, root,-)
 %{app_root}/Gemfile*
 %{app_root}/.bundle
-%{app_root}/%{gem_bindir}
+%{app_root}/%{gem_bindir}/
+%dir %{app_root}/%{gem_insdir}/gems/
+%dir %{app_root}/%{gem_insdir}/specifications/
+%dir %{app_root}/%{gem_extdir}/
 
 
 %changelog
