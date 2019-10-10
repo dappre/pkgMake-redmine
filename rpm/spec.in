@@ -3,6 +3,16 @@
 %define rpm_release  #RPM_RELEASE#
 %define rpm_packager #RPM_PACKAGER#
 
+%define ruby_scl    rh-ruby22
+%define ruby_pfx    %{ruby_scl}-
+%define ruby_dir    /opt/rh/%{ruby_scl}/root
+%define app_root    %{_var}/www/%{rpm_name}
+%define app_bindir  %{app_root}/bin
+%define app_etcdir  %{_sysconfdir}/%{rpm_name}
+%define app_libdir  %{_var}/lib/%{rpm_name}
+%define app_logdir  %{_var}/log/%{rpm_name}
+%define app_tmpdir  %{_var}/tmp/%{rpm_name}
+
 Name:           %{rpm_name}
 Version:        %{rpm_version}
 Release:        %{rpm_release}%{?dist}
@@ -11,40 +21,16 @@ Group:          Networking/WWW
 License:        GPLv2+
 URL:            http://www.redmine.org
 Source0:        http://www.redmine.org/releases/#RPM_NAME#-#RPM_VERSION#.tar.gz
-Source101:      %{name}.logrotate
-Source102:      %{name}.apache24
-Source103:      %{name}-pg-database.yml
-#BuildRequires: ruby >= 1.8.7
-#BuildRequires: ruby-RubyGems
-#BuildRequires:	ruby-fastercsv
+Source101:      %{rpm_name}-database.yml.sqlite3
+Source102:      %{rpm_name}-database.yml.mysql2
+Source103:      %{rpm_name}-database.yml.postgresql
+Source104:      %{rpm_name}.logrotate
+Source105:      %{rpm_name}.apache
+Requires:       logrotate
 Requires:       webserver
-Requires:       rubygem-rails >= 4.0.1
-Requires:       rubygems
 Requires:       %{name}-db
-Requires:       rubygem-bigdecimal
-Requires:       rubygem(jquery-rails) >= 2.0.2
-Requires:       rubygem(i18n) >= 0.6.6
-Requires:       rubygem(coderay) >= 1.0.9
-Requires:       rubygem(fastercsv) >= 1.5.0
-Requires:       rubygem(builder) => 3.0.0
-Requires:       rubygem-database_cleaner
-%if 0%{?fedora} > 20
-# Only suggests rubygem-passenger, after all, it can work with fcgi too
-Suggests:       rubygem-passenger
-Suggests:       ruby-RMagick
-Suggests:       rubygem-ruby-openid
-Suggests:       %{name}-scm
-Suggests:       ruby-rack-openid
-Suggests:       ruby-selenium-webdriver
-Suggests:       ruby-actionpack
-Suggests:       ruby-net-ldap
-Suggests:       ruby-yard
-Suggests:       ruby-shoulda
-Suggests:       ruby-mocha
-Suggests:       ruby-capybara
-Suggests:       ruby-protected_attributes
-Suggests:       ruby-actionpack-action_caching
-%endif
+Requires:       %{name}-gems
+
 BuildArch:      noarch
 
 %description
@@ -75,7 +61,7 @@ Overview
 %package pg
 Summary:        A flexible project management web application - pgsql connector
 Group:          Networking/WWW
-Requires:       rubygem-pg
+Requires:       %{name}-gems-pg   = %{version}-%{release}
 Provides:       %{name}-pg = %{version}-%{release}
 Provides:       %{name}-db = %{version}-%{release}
 
@@ -87,13 +73,22 @@ This package contains the needed modules to use postgresql as redmine's
 database backend.
 
 
+%post pg
+pushd %{app_etcdir} > /dev/null
+
+# Configure db if required
+DB_CONF='database.yml'
+[ -s "${DB_CONF}" ] || cp -af "${DB_CONF}.postgresql" "${DB_CONF}"
+popd > /dev/null
+
+
 %files pg
-%{_var}/www/%{name}/config/database.postgres.yml
+%{app_etcdir}/database.yml.postgresql
 #-------------------------------------------------------------------------------
 %package mysql
 Summary:        A flexible project management web application - mysql connector
 Group:          Networking/WWW
-Requires:       rubygem-mysql2
+Requires:       %{name}-gems-mysql   = %{version}-%{release}
 Provides:       %{name}-mysql = %{version}-%{release}
 Provides:       %{name}-db    = %{version}-%{release}
 
@@ -105,13 +100,22 @@ This package contains the needed modules to use mysql as redmine's
 database backend.
 
 
+%post mysql
+pushd %{app_etcdir} > /dev/null
+
+# Configure db if required
+DB_CONF='database.yml'
+[ -s "${DB_CONF}" ] || cp -af "${DB_CONF}.mysql2" "${DB_CONF}"
+popd > /dev/null
+
+
 %files mysql
-%config(noreplace) %{_var}/www/%{name}/config/database.yml
+%{app_etcdir}/database.yml.mysql2
 #-------------------------------------------------------------------------------
 %package sqlite
 Summary:        A flexible project management web application - sqlite connector
 Group:          Networking/WWW
-Requires:       rubygem-sqlite3
+Requires:       %{name}-gems-sqlite   = %{version}-%{release}
 Provides:       %{name}-sqlite = %{version}-%{release}
 Provides:       %{name}-db     = %{version}-%{release}
 
@@ -123,7 +127,17 @@ This package contains the needed modules to use sqlite as redmine's
 database backend.
 
 
+%post sqlite
+pushd %{app_etcdir} > /dev/null
+
+# Configure db if required
+DB_CONF='database.yml'
+[ -s "${DB_CONF}" ] || cp -af "${DB_CONF}.sqlite3" "${DB_CONF}"
+popd > /dev/null
+
+
 %files sqlite
+%{app_etcdir}/database.yml.sqlite3
 #-------------------------------------------------------------------------------
 %package git
 Summary:        A flexible project management web application - git backend
@@ -211,76 +225,161 @@ version control system backend
 %files cvs
 #-------------------------------------------------------------------------------
 
-%prep
-%setup -q
 
-# Remove the backup patch files as the install is done with cp *
-rm -f *.00??
+%prep
+%setup -q -n %{rpm_name}-%{rpm_version}
+
+# Cleanup
+find . -name "delete.me" -exec rm {} \;
+find . -name "empty" -exec rm {} \;
+find . -name ".hgignore" -exec rm {} \;
+find . -name ".gitignore" -exec rm {} \;
+find . -name ".gitkeep" -exec rm {} \;
+%{__rm} -rf .github
+%{__rm} -rf test
+%{__rm} -f config/environments/development.rb
+%{__rm} -f config/environments/test*.rb
+%{__rm} -f appveyor.yml
+
 
 %build
-find . -name ".gitignore" -exec rm {} \;
+# Nothing to build here
+
 
 %install
-install -d %{buildroot}%{_var}/www/%{name}
-cp -rf * %{buildroot}%{_var}/www/%{name}
+install -d %{buildroot}%{app_root}
+%{__mkdir} -p %{buildroot}/{%{app_etcdir},%{app_libdir},%{app_logdir},%{app_tmpdir}}
+%{__cp} -rf config/* %{buildroot}%{app_etcdir}
+%{__cp} -rf db %{buildroot}%{app_libdir}
+%{__cp} -rf files %{buildroot}%{app_libdir}
+%{__cp} -rf tmp/* %{buildroot}%{app_tmpdir}
+%{__cp} -rf * %{buildroot}%{app_root}
 
-# Don’t include bundled rails
-rm -rf %{buildroot}%{_var}/www/%{name}/vendor/rails
+# Provide DB configs
+install -D -m644 %{SOURCE101} %{buildroot}%{app_etcdir}/database.yml.sqlite3
+install -D -m644 %{SOURCE102} %{buildroot}%{app_etcdir}/database.yml.mysql2
+install -D -m644 %{SOURCE103} %{buildroot}%{app_etcdir}/database.yml.postgresql
 
-# Don't include some prebuilt binaries
-rm -rf %{buildroot}%{_var}/www/%{name}/lib/plugins/rfpdf/lib/fonts/ttf2ufm
+# Replace empty folders with sym links
+pushd %{buildroot}%{app_root}
+%{__rm} -rf {config,db,files,log,tmp}
+ln -s %{app_etcdir} config
+ln -s %{app_libdir}/db db
+ln -s %{app_libdir}/files files
+ln -s %{app_logdir} log
+ln -s %{app_tmpdir} tmp
+popd
 
-# Copy database.yml.example as it’s mandatory to run redmine
-cp %{buildroot}%{_var}/www/%{name}/config/database.yml.example %{buildroot}%{_var}/www/%{name}/config/database.yml
-# Likewise, add postgresql conf
-install -D -m644 %{SOURCE103} %{buildroot}%{_var}/www/%{name}/config/database.postgres.yml
+# Don’t include bundle and Gemfiles
+%{__rm} -rf %{buildroot}%{app_root}/vendor
+%{__rm} -rf %{buildroot}%{app_root}/Gemfile*
+
 
 # Add Logrotate script
 mkdir -p %{buildroot}%{_sysconfdir}/logrotate.d/
-install -D -m644 %{SOURCE101} %{buildroot}%{_sysconfdir}/logrotate.d/%{name}
+install -D -m644 %{SOURCE104} %{buildroot}%{_sysconfdir}/logrotate.d/%{name}
 
 # Add httpd default conf
+# TODO: support other webservers (nginx at least)
 mkdir -p %{buildroot}%{_sysconfdir}/httpd/conf.d/
-install -D -m644 %{SOURCE102} %{buildroot}%{_sysconfdir}/httpd/conf/vhosts.d/%{name}.conf
+install -D -m644 %{SOURCE105} %{buildroot}%{_sysconfdir}/httpd/conf.d/%{name}.conf
+
+
+%post
+pushd %{app_root} > /dev/null
+
+# Prepare log file if required
+LOG_FILE="log/production.log"
+if [ -n "${LOG_FILE}" -a ! -f "${LOG_FILE}" ]; then
+  touch "${LOG_FILE}"
+  chown nobody:nobody "${LOG_FILE}"
+  chmod 0644 "${LOG_FILE}"
+fi
+
+# No clue why it is needed to unfroze - main post script won't find any gem otherwise!
+scl enable %{ruby_scl} -- bundle config --local frozen 0 > /dev/null
+scl enable %{ruby_scl} -- bundle show > /dev/null
+scl enable %{ruby_scl} -- bundle config --local frozen 1 > /dev/null
+
+# Generate secret token if required
+if [ ! -f "config/initializers/secret_token.rb" ]; then
+  echo -n 'Running generate_secret_token task... '
+  RAILS_ENV=production scl enable %{ruby_scl} -- bundle exec rake generate_secret_token > /dev/null 2>&1
+  if [ ${?} -eq 0 ]; then
+    echo 'ok'
+  else
+    echo "error (check logs in $(pwd)/log)"
+  fi
+fi
+
+# Create default db file if required
+DB_CONF='config/database.yml'
+DB_ADAPTER="$(sed -n -r -e '/^production:/,/^$/ { s/^\s+adapter:\s*(.+)$/\1/ p }' "${DB_CONF}")"
+DB_FILE="$(sed -n -r -e '/^production:/,/^$/ { s/^\s+database:\s*(.+)$/\1/ p }' "${DB_CONF}")"
+DB_DIR="$(dirname "${DB_FILE}")"
+
+if [ "${DB_ADAPTER}" = 'sqlite3' -a -n "${DB_FILE}" -a ! -f "${DB_FILE}" ]; then
+  [ -d "${DB_DIR}" ] || { mkdir -p "${DB_DIR}" && chown nobody:nobody "${DB_DIR}" && chmod 0755 "${DB_DIR}"; }
+  touch "${DB_FILE}"
+  chown nobody:nobody "${DB_FILE}"
+  chmod 0644 "${DB_FILE}"
+fi
+
+# Initialize or migrate the DB
+echo -n 'Running db:migrate task... '
+RAILS_ENV=production scl enable %{ruby_scl} -- bundle exec rake db:migrate > /dev/null 2>&1
+if [ ${?} -eq 0 ]; then
+  echo 'ok'
+else
+  echo "error (check logs in $(pwd)/log)"
+fi
+popd > /dev/null
+
+
+%postun
+# Remove what's left, mostly vendor/bundle/...
+%{__rm} -rf %{app_root}
+
 
 %files
+%defattr(-,root, root,-)
 %{_sysconfdir}/logrotate.d/%{name}
-%config(noreplace) %{_sysconfdir}/httpd/conf/vhosts.d/%{name}.conf
-%doc %{_var}/www/%{name}/README.rdoc
-%doc %{_var}/www/%{name}/CONTRIBUTING.md
-%dir %{_var}/www/%{name}/
-%{_var}/www/%{name}/app/
-%dir %{_var}/www/%{name}/config/
-%doc %{_var}/www/%{name}/config/*.example
-%{_var}/www/%{name}/config/environments/
-%{_var}/www/%{name}/config/locales/
-%{_var}/www/%{name}/config/initializers/
-%{_var}/www/%{name}/config/routes.rb
-%{_var}/www/%{name}/config/boot.rb
-%{_var}/www/%{name}/config/environment.rb
-%{_var}/www/%{name}/config/settings.yml
-%{_var}/www/%{name}/db/
-%{_var}/www/%{name}/doc/
-%{_var}/www/%{name}/extra/
-# Directory has to be owned by the user under which the webserver runs
-# Since apache is the preferred webserver for many people simplify the
-# process for those users, but it sucks, all webservers should belong
-# to the same user :-(
-%attr(0755,apache,apache) %{_var}/www/%{name}/files/
-%{_var}/www/%{name}/lib/
-%attr(0755,apache,apache) %{_var}/www/%{name}/log/
-%{_var}/www/%{name}/public/
-%{_var}/www/%{name}/Rakefile
-%{_var}/www/%{name}/script/
-%{_var}/www/%{name}/test/
-%attr(0755,apache,apache) %{_var}/www/%{name}/tmp/
-%{_var}/www/%{name}/vendor/
-%{_var}/www/%{name}/Gemfile
-%{_var}/www/%{name}/config.ru
-%{_var}/www/%{name}/config/application.rb
-#{_var}/www/%{name}/config/preinitializer.rb
-%{_var}/www/%{name}/plugins/README
-%{_var}/www/%{name}/bin/
+%config(noreplace) %{_sysconfdir}/httpd/conf.d/%{name}.conf
+%ghost %config(noreplace) %{app_etcdir}/database.yml
+%doc %{app_root}/README.rdoc
+%doc %{app_root}/CONTRIBUTING.md
+%{app_root}/app/
+%dir %{app_etcdir}/
+%doc %{app_etcdir}/*.example
+%{app_etcdir}/application.rb
+%{app_etcdir}/boot.rb
+%{app_etcdir}/environment.rb
+%{app_etcdir}/environments/
+%{app_etcdir}/initializers/
+%{app_etcdir}/locales/
+%{app_etcdir}/routes.rb
+%config(noreplace) %{app_etcdir}/settings.yml
+%attr(0755,nobody,nobody) %dir %{app_libdir}/db/
+%{app_libdir}/db/*
+%attr(0755,nobody,nobody) %dir %{app_libdir}/files/
+%attr(0755,nobody,nobody) %dir %{app_logdir}/
+%attr(0755,nobody,nobody) %dir %{app_tmpdir}/
+%attr(0755,nobody,nobody) %dir %{app_tmpdir}/*
+%dir %{app_root}/
+%{app_root}/bin/
+%{app_root}/config
+%{app_root}/config.ru
+%{app_root}/db
+%{app_root}/doc/
+%{app_root}/extra/
+%{app_root}/files
+%{app_root}/log
+%{app_root}/lib/
+%{app_root}/plugins/
+%{app_root}/public/
+%{app_root}/Rakefile
+%{app_root}/tmp
+
 
 %changelog
 %include %{_specdir}/changelog

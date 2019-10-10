@@ -1,0 +1,45 @@
+# One of the following module needs to be loaded
+#LoadModule passenger_module /usr/lib64/httpd/modules/mod_passenger.so
+#LoadModule fastcgi_module /usr/lib64/httpd/modules/mod_fastcgi.so
+#LoadModule fcgid_module /usr/lib64/httpd/modules/mod_fcgid.so
+
+<Directory "/var/www/redmine/public/">
+  Options Indexes ExecCGI FollowSymLinks
+  Require all granted
+  AllowOverride all
+</Directory>
+
+Alias /redmine /var/www/redmine/public
+
+<Location /redmine>
+  <IfModule mod_passenger.c>
+    <IfModule !mod_env.c>
+      LoadModule env_module modules/mod_env.so
+    </IfModule>
+    SetEnv BUNDLE_WITHOUT "test:development"
+    SetEnv LD_LIBRARY_PATH /opt/rh/rh-ruby22/root/usr/lib64
+    PassengerRuby /opt/rh/rh-ruby22/root/usr/bin/ruby
+    PassengerAppEnv production
+    PassengerBaseURI /redmine
+    PassengerAppRoot /var/www/redmine
+  </IfModule>
+
+  <IfModule !mod_passenger.c>
+    <IfModule !mod_rewrite.c>
+      LoadModule rewrite_module /usr/lib64/httpd/modules/mod_rewrite.so
+    </IfModule>
+    RewriteEngine On
+    RewriteBase /redmine
+    RewriteRule ^$ index.html [QSA]
+    RewriteRule ^([^.]+)$ $1.html [QSA]
+    RewriteCond %{REQUEST_FILENAME} !-f
+
+    <IfModule mod_fastcgi.c>
+      RewriteRule ^(.*)$ dispatch.fcgi [QSA,L]
+    </IfModule>
+
+    <IfModule mod_fcgid.c>
+      RewriteRule ^(.*)$ dispatch.fcgi [QSA,L]
+    </IfModule>
+  </IfModule>
+</Location>
