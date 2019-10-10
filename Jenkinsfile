@@ -154,7 +154,8 @@ LOG_FILE=/dev/stdout
 cd ${env.TARGET_DIR}/dists/${env.LAZY_LABEL}
 sudo yum -y install redmine-${version}-${release}.*.rpm \
  redmine-gems-${version}-${release}.*.rpm \
- redmine-sqlite-${version}-${release}.*.rpm
+ redmine-sqlite-${version}-${release}.*.rpm \
+ redmine-gems-sqlite-${version}-${release}.*.rpm
 """
 			)
 		},
