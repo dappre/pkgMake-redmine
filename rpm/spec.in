@@ -26,6 +26,7 @@ Source102:      %{rpm_name}-database.yml.mysql2
 Source103:      %{rpm_name}-database.yml.postgresql
 Source104:      %{rpm_name}.logrotate
 Source105:      %{rpm_name}.apache
+Requires:       logrotate
 Requires:       webserver
 Requires:       %{name}-db
 Requires:       %{name}-gems
@@ -279,6 +280,7 @@ mkdir -p %{buildroot}%{_sysconfdir}/logrotate.d/
 install -D -m644 %{SOURCE104} %{buildroot}%{_sysconfdir}/logrotate.d/%{name}
 
 # Add httpd default conf
+# TODO: support other webservers (nginx at least)
 mkdir -p %{buildroot}%{_sysconfdir}/httpd/conf.d/
 install -D -m644 %{SOURCE105} %{buildroot}%{_sysconfdir}/httpd/conf.d/%{name}.conf
 
