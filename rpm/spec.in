@@ -314,8 +314,8 @@ fi
 
 # Create default db file if required
 DB_CONF='config/database.yml'
-DB_ADAPTER="$(sed -n -r -e '/^production:/,/^$/ { s/^\s+adapter:\s*(.+)$/\1/ p }' "${DB_CONF}")"
-DB_FILE="$(sed -n -r -e '/^production:/,/^$/ { s/^\s+database:\s*(.+)$/\1/ p }' "${DB_CONF}")"
+DB_ADAPTER="$(sed -n -r -e '/^production:/,/^$/ { s/^\s+adapter:\s*[^-_/\w]?(.+)[^-_/\w]?$/\1/ p }' "${DB_CONF}")"
+DB_FILE="$(sed -n -r -e '/^production:/,/^$/ { s/^\s+database:\s*[^-_/\w]?(.+)[^-_/\w]?$/\1/ p }' "${DB_CONF}")"
 DB_DIR="$(dirname "${DB_FILE}")"
 
 if [ "${DB_ADAPTER}" = 'sqlite3' -a -n "${DB_FILE}" -a ! -f "${DB_FILE}" ]; then
