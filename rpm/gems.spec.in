@@ -236,6 +236,11 @@ sed -r -e '/\/(mysql2|pg|sqlite3)-[.0-9]+(\.gemspec)?$/ d' -i gems.lst
 %{__cp} -a Gemfile* .bundle vendor %{buildroot}%{app_root}
 
 
+%postun
+# Remove what's left
+%{__rm} -rf %{gem_insdir}
+
+
 %files -f gems.lst
 %defattr(-,root, root,-)
 %{app_root}/Gemfile*
