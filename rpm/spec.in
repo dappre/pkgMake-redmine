@@ -359,12 +359,12 @@ popd > /dev/null
 %{app_etcdir}/locales/
 %{app_etcdir}/routes.rb
 %config(noreplace) %{app_etcdir}/settings.yml
-%attr(0755,nobody,nobody) %dir %{app_libdir}/db/
+%attr(0775,root,nobody) %dir %{app_libdir}/db/
 %{app_libdir}/db/*
-%attr(0755,nobody,nobody) %dir %{app_libdir}/files/
-%attr(0755,nobody,nobody) %dir %{app_logdir}/
-%attr(0755,nobody,nobody) %dir %{app_tmpdir}/
-%attr(0755,nobody,nobody) %dir %{app_tmpdir}/*
+%attr(0775,root,nobody) %dir %{app_libdir}/files/
+%attr(0775,root,nobody) %dir %{app_logdir}/
+%attr(0775,root,nobody) %dir %{app_tmpdir}/
+%attr(0775,root,nobody) %dir %{app_tmpdir}/*
 %dir %{app_root}/
 %{app_root}/bin/
 %{app_root}/config
