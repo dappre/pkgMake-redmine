@@ -28,8 +28,8 @@ Source104:      %{rpm_name}.logrotate
 Source105:      %{rpm_name}.apache
 Requires:       logrotate
 Requires:       webserver
-Requires:       %{name}-db
-Requires:       %{name}-gems
+Requires:       %{name}-db           = %{version}-%{release}
+Requires:       %{name}-gems         = %{version}-%{release}
 
 BuildArch:      noarch
 
@@ -61,9 +61,10 @@ Overview
 %package pg
 Summary:        A flexible project management web application - pgsql connector
 Group:          Networking/WWW
-Requires:       %{name}-gems-pg   = %{version}-%{release}
-Provides:       %{name}-pg = %{version}-%{release}
-Provides:       %{name}-db = %{version}-%{release}
+Requires:       %{name}              = %{version}-%{release}
+Requires:       %{name}-gems-pg      = %{version}-%{release}
+Provides:       %{name}-pg           = %{version}-%{release}
+Provides:       %{name}-db           = %{version}-%{release}
 
 %description pg
 Redmine is a flexible project management web application. Written using
@@ -88,9 +89,10 @@ popd > /dev/null
 %package mysql
 Summary:        A flexible project management web application - mysql connector
 Group:          Networking/WWW
+Requires:       %{name}              = %{version}-%{release}
 Requires:       %{name}-gems-mysql   = %{version}-%{release}
-Provides:       %{name}-mysql = %{version}-%{release}
-Provides:       %{name}-db    = %{version}-%{release}
+Provides:       %{name}-mysql        = %{version}-%{release}
+Provides:       %{name}-db           = %{version}-%{release}
 
 %description mysql
 Redmine is a flexible project management web application. Written using
@@ -115,9 +117,10 @@ popd > /dev/null
 %package sqlite
 Summary:        A flexible project management web application - sqlite connector
 Group:          Networking/WWW
-Requires:       %{name}-gems-sqlite   = %{version}-%{release}
-Provides:       %{name}-sqlite = %{version}-%{release}
-Provides:       %{name}-db     = %{version}-%{release}
+Requires:       %{name}              = %{version}-%{release}
+Requires:       %{name}-gems-sqlite  = %{version}-%{release}
+Provides:       %{name}-sqlite       = %{version}-%{release}
+Provides:       %{name}-db           = %{version}-%{release}
 
 %description sqlite
 Redmine is a flexible project management web application. Written using
@@ -143,8 +146,9 @@ popd > /dev/null
 Summary:        A flexible project management web application - git backend
 Group:          Networking/WWW
 Requires:       git-core
-Provides:       %{name}-git = %{version}-%{release}
-Provides:       %{name}-scm = %{version}-%{release}
+Requires:       %{name}              = %{version}-%{release}
+Provides:       %{name}-git          = %{version}-%{release}
+Provides:       %{name}-scm          = %{version}-%{release}
 
 %description git
 Redmine is a flexible project management web application. Written using
@@ -160,8 +164,9 @@ version control system backend
 Summary:        A flexible project management web application - subversion backend
 Group:          Networking/WWW
 Requires:       subversion
-Provides:       %{name}-svn = %{version}-%{release}
-Provides:       %{name}-scm = %{version}-%{release}
+Requires:       %{name}              = %{version}-%{release}
+Provides:       %{name}-svn          = %{version}-%{release}
+Provides:       %{name}-scm          = %{version}-%{release}
 
 %description svn
 Redmine is a flexible project management web application. Written using
@@ -177,8 +182,9 @@ version control system backend
 Summary:        A flexible project management web application - mercurial backend
 Group:          Networking/WWW
 Requires:       mercurial
-Provides:       %{name}-hg  = %{version}-%{release}
-Provides:       %{name}-scm = %{version}-%{release}
+Requires:       %{name}              = %{version}-%{release}
+Provides:       %{name}-hg           = %{version}-%{release}
+Provides:       %{name}-scm          = %{version}-%{release}
 
 %description hg
 Redmine is a flexible project management web application. Written using
@@ -194,8 +200,9 @@ version control system backend
 Summary:        A flexible project management web application - bzr backend
 Group:          Networking/WWW
 Requires:       bzr
-Provides:       %{name}-bzr = %{version}-%{release}
-Provides:       %{name}-scm = %{version}-%{release}
+Requires:       %{name}              = %{version}-%{release}
+Provides:       %{name}-bzr          = %{version}-%{release}
+Provides:       %{name}-scm          = %{version}-%{release}
 
 %description bzr
 Redmine is a flexible project management web application. Written using
@@ -211,8 +218,9 @@ version control system backend
 Summary:        A flexible project management web application - cvs backend
 Group:          Networking/WWW
 Requires:       cvs
-Provides:       %{name}-cvs = %{version}-%{release}
-Provides:       %{name}-scm = %{version}-%{release}
+Requires:       %{name}              = %{version}-%{release}
+Provides:       %{name}-cvs          = %{version}-%{release}
+Provides:       %{name}-scm          = %{version}-%{release}
 
 %description cvs
 Redmine is a flexible project management web application. Written using
@@ -289,12 +297,13 @@ install -D -m644 %{SOURCE105} %{buildroot}%{_sysconfdir}/httpd/conf.d/%{name}.co
 pushd %{app_root} > /dev/null
 
 # Prepare log file if required
-LOG_FILE="log/production.log"
+LOG_FILE="%{app_logdir}/production.log"
 if [ -n "${LOG_FILE}" -a ! -f "${LOG_FILE}" ]; then
   touch "${LOG_FILE}"
   chown nobody:nobody "${LOG_FILE}"
   chmod 0644 "${LOG_FILE}"
 fi
+LOG_FILE="%{app_logdir}/install.log"
 
 # No clue why it is needed to unfroze - main post script won't find any gem otherwise!
 scl enable %{ruby_scl} -- bundle config --local frozen 0 > /dev/null
@@ -302,24 +311,24 @@ scl enable %{ruby_scl} -- bundle show > /dev/null
 scl enable %{ruby_scl} -- bundle config --local frozen 1 > /dev/null
 
 # Generate secret token if required
-if [ ! -f "config/initializers/secret_token.rb" ]; then
+if [ ! -f "%{app_etcdir}/initializers/secret_token.rb" ]; then
   echo -n 'Running generate_secret_token task... '
-  RAILS_ENV=production scl enable %{ruby_scl} -- bundle exec rake generate_secret_token > /dev/null 2>&1
+  RAILS_ENV=production scl enable %{ruby_scl} -- bundle exec rake generate_secret_token >> "${LOG_FILE}" 2>&1
   if [ ${?} -eq 0 ]; then
     echo 'ok'
   else
-    echo "error (check logs in $(pwd)/log)"
+    echo "error (check logs in %{app_logdir}/log)"
   fi
 fi
 
 # Create default db file if required
-DB_CONF='config/database.yml'
-DB_ADAPTER="$(sed -n -r -e '/^production:/,/^$/ { s/^\s+adapter:\s*(.+)$/\1/ p }' "${DB_CONF}")"
-DB_FILE="$(sed -n -r -e '/^production:/,/^$/ { s/^\s+database:\s*(.+)$/\1/ p }' "${DB_CONF}")"
+DB_CONF="%{app_etcdir}/database.yml"
+DB_ADAPTER="$(sed -n -r -e '/^production:/,/^$/ { s/^\s+adapter:\s*[^-_/\w]?(.+)[^-_/\w]?$/\1/ p }' "${DB_CONF}")"
+DB_FILE="$(sed -n -r -e '/^production:/,/^$/ { s/^\s+database:\s*[^-_/\w]?(.+)[^-_/\w]?$/\1/ p }' "${DB_CONF}")"
 DB_DIR="$(dirname "${DB_FILE}")"
 
 if [ "${DB_ADAPTER}" = 'sqlite3' -a -n "${DB_FILE}" -a ! -f "${DB_FILE}" ]; then
-  [ -d "${DB_DIR}" ] || { mkdir -p "${DB_DIR}" && chown nobody:nobody "${DB_DIR}" && chmod 0755 "${DB_DIR}"; }
+  [ -d "${DB_DIR}" ] || { mkdir -p "${DB_DIR}" && chown root:nobody "${DB_DIR}" && chmod 0775 "${DB_DIR}"; }
   touch "${DB_FILE}"
   chown nobody:nobody "${DB_FILE}"
   chmod 0644 "${DB_FILE}"
@@ -327,18 +336,14 @@ fi
 
 # Initialize or migrate the DB
 echo -n 'Running db:migrate task... '
-RAILS_ENV=production scl enable %{ruby_scl} -- bundle exec rake db:migrate > /dev/null 2>&1
+RAILS_ENV=production scl enable %{ruby_scl} -- bundle exec rake db:migrate >> "${LOG_FILE}" 2>&1
 if [ ${?} -eq 0 ]; then
   echo 'ok'
 else
-  echo "error (check logs in $(pwd)/log)"
+  echo "error (check logs in %{app_logdir}/log)"
 fi
+RAILS_ENV=production scl enable %{ruby_scl} -- bundle exec rake redmine:load_default_data >> "${LOG_FILE}" 2>&1
 popd > /dev/null
-
-
-%postun
-# Remove what's left, mostly vendor/bundle/...
-%{__rm} -rf %{app_root}
 
 
 %files
@@ -359,12 +364,12 @@ popd > /dev/null
 %{app_etcdir}/locales/
 %{app_etcdir}/routes.rb
 %config(noreplace) %{app_etcdir}/settings.yml
-%attr(0755,nobody,nobody) %dir %{app_libdir}/db/
+%attr(0775,root,nobody) %dir %{app_libdir}/db/
 %{app_libdir}/db/*
-%attr(0755,nobody,nobody) %dir %{app_libdir}/files/
-%attr(0755,nobody,nobody) %dir %{app_logdir}/
-%attr(0755,nobody,nobody) %dir %{app_tmpdir}/
-%attr(0755,nobody,nobody) %dir %{app_tmpdir}/*
+%attr(0775,root,nobody) %dir %{app_libdir}/files/
+%attr(0775,root,nobody) %dir %{app_logdir}/
+%attr(0775,root,nobody) %dir %{app_tmpdir}/
+%attr(0775,root,nobody) %dir %{app_tmpdir}/*
 %dir %{app_root}/
 %{app_root}/bin/
 %{app_root}/config
