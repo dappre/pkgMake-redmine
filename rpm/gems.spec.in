@@ -22,7 +22,7 @@ Source0:        http://www.redmine.org/releases/#RPM_NAME#-#RPM_VERSION#.tar.gz
 Source101:      %{rpm_name}-database.yml.sqlite3
 Source102:      %{rpm_name}-Gemfile.local
 Source103:      %{rpm_name}-Gemfile.lock
-Patch1:			%{rpm_name}-Gemfile.patch
+Patch1:         %{rpm_name}-Gemfile.patch
 # All required gems
 Source1001:     https://rubygems.org/downloads/actioncable-5.2.2.gem
 Source1002:     https://rubygems.org/downloads/actionmailer-5.2.2.gem

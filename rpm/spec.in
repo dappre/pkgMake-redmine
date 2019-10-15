@@ -28,8 +28,8 @@ Source104:      %{rpm_name}.logrotate
 Source105:      %{rpm_name}.apache
 Requires:       logrotate
 Requires:       webserver
-Requires:       %{name}-db
-Requires:       %{name}-gems
+Requires:       %{name}-db           = %{version}-%{release}
+Requires:       %{name}-gems         = %{version}-%{release}
 
 BuildArch:      noarch
 
@@ -61,9 +61,10 @@ Overview
 %package pg
 Summary:        A flexible project management web application - pgsql connector
 Group:          Networking/WWW
-Requires:       %{name}-gems-pg   = %{version}-%{release}
-Provides:       %{name}-pg = %{version}-%{release}
-Provides:       %{name}-db = %{version}-%{release}
+Requires:       %{name}              = %{version}-%{release}
+Requires:       %{name}-gems-pg      = %{version}-%{release}
+Provides:       %{name}-pg           = %{version}-%{release}
+Provides:       %{name}-db           = %{version}-%{release}
 
 %description pg
 Redmine is a flexible project management web application. Written using
@@ -88,9 +89,10 @@ popd > /dev/null
 %package mysql
 Summary:        A flexible project management web application - mysql connector
 Group:          Networking/WWW
+Requires:       %{name}              = %{version}-%{release}
 Requires:       %{name}-gems-mysql   = %{version}-%{release}
-Provides:       %{name}-mysql = %{version}-%{release}
-Provides:       %{name}-db    = %{version}-%{release}
+Provides:       %{name}-mysql        = %{version}-%{release}
+Provides:       %{name}-db           = %{version}-%{release}
 
 %description mysql
 Redmine is a flexible project management web application. Written using
@@ -115,9 +117,10 @@ popd > /dev/null
 %package sqlite
 Summary:        A flexible project management web application - sqlite connector
 Group:          Networking/WWW
-Requires:       %{name}-gems-sqlite   = %{version}-%{release}
-Provides:       %{name}-sqlite = %{version}-%{release}
-Provides:       %{name}-db     = %{version}-%{release}
+Requires:       %{name}              = %{version}-%{release}
+Requires:       %{name}-gems-sqlite  = %{version}-%{release}
+Provides:       %{name}-sqlite       = %{version}-%{release}
+Provides:       %{name}-db           = %{version}-%{release}
 
 %description sqlite
 Redmine is a flexible project management web application. Written using
@@ -143,8 +146,9 @@ popd > /dev/null
 Summary:        A flexible project management web application - git backend
 Group:          Networking/WWW
 Requires:       git-core
-Provides:       %{name}-git = %{version}-%{release}
-Provides:       %{name}-scm = %{version}-%{release}
+Requires:       %{name}              = %{version}-%{release}
+Provides:       %{name}-git          = %{version}-%{release}
+Provides:       %{name}-scm          = %{version}-%{release}
 
 %description git
 Redmine is a flexible project management web application. Written using
@@ -160,8 +164,9 @@ version control system backend
 Summary:        A flexible project management web application - subversion backend
 Group:          Networking/WWW
 Requires:       subversion
-Provides:       %{name}-svn = %{version}-%{release}
-Provides:       %{name}-scm = %{version}-%{release}
+Requires:       %{name}              = %{version}-%{release}
+Provides:       %{name}-svn          = %{version}-%{release}
+Provides:       %{name}-scm          = %{version}-%{release}
 
 %description svn
 Redmine is a flexible project management web application. Written using
@@ -177,8 +182,9 @@ version control system backend
 Summary:        A flexible project management web application - mercurial backend
 Group:          Networking/WWW
 Requires:       mercurial
-Provides:       %{name}-hg  = %{version}-%{release}
-Provides:       %{name}-scm = %{version}-%{release}
+Requires:       %{name}              = %{version}-%{release}
+Provides:       %{name}-hg           = %{version}-%{release}
+Provides:       %{name}-scm          = %{version}-%{release}
 
 %description hg
 Redmine is a flexible project management web application. Written using
@@ -194,8 +200,9 @@ version control system backend
 Summary:        A flexible project management web application - bzr backend
 Group:          Networking/WWW
 Requires:       bzr
-Provides:       %{name}-bzr = %{version}-%{release}
-Provides:       %{name}-scm = %{version}-%{release}
+Requires:       %{name}              = %{version}-%{release}
+Provides:       %{name}-bzr          = %{version}-%{release}
+Provides:       %{name}-scm          = %{version}-%{release}
 
 %description bzr
 Redmine is a flexible project management web application. Written using
@@ -211,8 +218,9 @@ version control system backend
 Summary:        A flexible project management web application - cvs backend
 Group:          Networking/WWW
 Requires:       cvs
-Provides:       %{name}-cvs = %{version}-%{release}
-Provides:       %{name}-scm = %{version}-%{release}
+Requires:       %{name}              = %{version}-%{release}
+Provides:       %{name}-cvs          = %{version}-%{release}
+Provides:       %{name}-scm          = %{version}-%{release}
 
 %description cvs
 Redmine is a flexible project management web application. Written using
