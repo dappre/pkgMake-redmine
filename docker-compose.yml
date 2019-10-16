@@ -14,3 +14,10 @@ services:
     tty: true
     hostname: build.local
     container_name: build.local
+    command: bash
+    networks:
+      - bridge
+
+networks:
+  bridge:
+    external: true

@@ -294,31 +294,48 @@ install -D -m644 %{SOURCE105} %{buildroot}%{_sysconfdir}/httpd/conf.d/%{name}.co
 
 
 %post
-pushd %{app_root} > /dev/null
-
-# Prepare log file if required
+# Prepare application log file if required
 LOG_FILE="%{app_logdir}/production.log"
 if [ -n "${LOG_FILE}" -a ! -f "${LOG_FILE}" ]; then
   touch "${LOG_FILE}"
   chown nobody:nobody "${LOG_FILE}"
   chmod 0644 "${LOG_FILE}"
 fi
+# Use separeted log file for the following installation steps
 LOG_FILE="%{app_logdir}/install.log"
 
+# Avoid rake (yard) tasks to fail on missing HOME variable
+if [ -z "${HOME}" ]; then
+  echo "HOME not found: add HOME=%{app_root}" >> "${LOG_FILE}"
+  export HOME="%{app_root}"
+fi
+
+# Enter the main directory
+pushd %{app_root} > /dev/null
+
 # No clue why it is needed to unfroze - main post script won't find any gem otherwise!
-scl enable %{ruby_scl} -- bundle config --local frozen 0 > /dev/null
-scl enable %{ruby_scl} -- bundle show > /dev/null
-scl enable %{ruby_scl} -- bundle config --local frozen 1 > /dev/null
+echo "Bundle info:" >> "${LOG_FILE}"
+scl enable %{ruby_scl} -- bundle config --local frozen 0 >> "${LOG_FILE}" 2>&1
+scl enable %{ruby_scl} -- bundle >> "${LOG_FILE}" 2>&1
+scl enable %{ruby_scl} -- bundle config --local frozen 1 >> "${LOG_FILE}" 2>&1
+
+# Function to execute some rake tasks
+execRake() {
+  TASK="${1}"
+  echo "Start running execution of ${TASK} task..." >> "${LOG_FILE}"
+  RAILS_ENV=production scl enable %{ruby_scl} -- bundle exec rake ${TASK} >> "${LOG_FILE}" 2>&1
+  RET=$?
+  echo -n "End of ${TASK} task: " >> "${LOG_FILE}"
+  if [ ${RET} -eq 0 ]; then
+    echo 'ok' >> "${LOG_FILE}"
+  else
+    echo 'error' >> "${LOG_FILE}"
+  fi
+}
 
 # Generate secret token if required
 if [ ! -f "%{app_etcdir}/initializers/secret_token.rb" ]; then
-  echo -n 'Running generate_secret_token task... '
-  RAILS_ENV=production scl enable %{ruby_scl} -- bundle exec rake generate_secret_token >> "${LOG_FILE}" 2>&1
-  if [ ${?} -eq 0 ]; then
-    echo 'ok'
-  else
-    echo "error (check logs in %{app_logdir}/log)"
-  fi
+  execRake generate_secret_token
 fi
 
 # Create default db file if required
@@ -334,15 +351,13 @@ if [ "${DB_ADAPTER}" = 'sqlite3' -a -n "${DB_FILE}" -a ! -f "${DB_FILE}" ]; then
   chmod 0644 "${DB_FILE}"
 fi
 
-# Initialize or migrate the DB
-echo -n 'Running db:migrate task... '
-RAILS_ENV=production scl enable %{ruby_scl} -- bundle exec rake db:migrate >> "${LOG_FILE}" 2>&1
-if [ ${?} -eq 0 ]; then
-  echo 'ok'
-else
-  echo "error (check logs in %{app_logdir}/log)"
-fi
-RAILS_ENV=production scl enable %{ruby_scl} -- bundle exec rake redmine:load_default_data >> "${LOG_FILE}" 2>&1
+# Create/update schema of the DB
+execRake db:migrate
+
+# Load default data in the DB
+REDMINE_LANG=en execRake redmine:load_default_data
+
+# Return to inital directory
 popd > /dev/null
 
 

@@ -1,8 +1,8 @@
-* Wed Oct  9 2019 Digital-Me Infra Team <infra@digital-me.nl> - 4.0.1
+* Wed Oct 16 2019 Digital-Me Infra Team <infra@digital-me.nl> - 4.0.1-3
 - Rolling out version 4.0.1 - http://www.redmine.org/versions/145
 - Reworked from Fedora to build on CentOS (7.7.1908) using rpmMake
-- Support Ruby 2.2 with Software Collections (rh-ruby22)
+- Use Ruby 2.2 from Software Collections (rh-ruby22)
 - Bundle all required gems in 4 separated packages
-- Provide config examples for each databases
-- Run token and migrate rake tasks in post script
+- Provide config examples for each database and use it by default
+- Run generate_secret_token, db:migrate and redmine:load_default_data tasks in post script
 - Use standard directories for config, db, lib, log and tmp
