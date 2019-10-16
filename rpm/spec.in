@@ -294,6 +294,14 @@ install -D -m644 %{SOURCE105} %{buildroot}%{_sysconfdir}/httpd/conf.d/%{name}.co
 
 
 %post
+# Prepare application log file if required
+LOG_FILE="%{app_logdir}/production.log"
+if [ -n "${LOG_FILE}" -a ! -f "${LOG_FILE}" ]; then
+  touch "${LOG_FILE}"
+  chown nobody:nobody "${LOG_FILE}"
+  chmod 0644 "${LOG_FILE}"
+fi
+# Use separeted log file for the following installation steps
 LOG_FILE="%{app_logdir}/install.log"
 
 # Avoid rake (yard) tasks to fail on missing HOME variable
