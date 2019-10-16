@@ -347,7 +347,7 @@ fi
 execRake db:migrate
 
 # Load default data in the DB
-execRake redmine:load_default_data
+REDMINE_LANG=en execRake redmine:load_default_data
 
 # Return to inital directory
 popd > /dev/null
