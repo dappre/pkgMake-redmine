@@ -7,9 +7,11 @@
 %define ruby_pfx    %{ruby_scl}-
 %define ruby_dir    /opt/rh/%{ruby_scl}/root
 %define app_root    %{_var}/www/%{rpm_name}
-%define gem_bindir  vendor/bundle/ruby/bin
-%define gem_insdir  vendor/bundle/ruby
-%define gem_extdir  vendor/bundle/ruby/extensions/%{_arch}-linux
+%define gem_vendir  vendor
+%define gem_bundir  %{gem_vendir}/bundle
+%define gem_insdir  %{gem_bundir}/ruby
+%define gem_bindir  %{gem_insdir}/bin
+%define gem_extdir  %{gem_insdir}/extensions/%{_arch}-linux
 
 Name:           %{rpm_name}-gems
 Version:        %{rpm_version}
@@ -245,9 +247,12 @@ sed -r -e '/\/(mysql2|pg|sqlite3)-[.0-9]+(\.gemspec)?$/ d' -i gems.lst
 %defattr(-,root, root,-)
 %{app_root}/Gemfile*
 %{app_root}/.bundle
-%{app_root}/%{gem_bindir}/
-%dir %{app_root}/%{gem_insdir}/gems/
-%dir %{app_root}/%{gem_insdir}/specifications/
+%{app_root}/%{gem_bindir}/*
+%dir %{app_root}/
+%dir %{app_root}/%{gem_bundir}/
+%dir %{app_root}/%{gem_vendir}/
+%dir %{app_root}/%{gem_insdir}/
+%dir %{app_root}/%{gem_insdir}/*
 %dir %{app_root}/%{gem_extdir}/
 
 
