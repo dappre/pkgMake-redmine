@@ -78,7 +78,7 @@ lazyConfig(
 	inLabels: [ /*'centos-6',*/ 'centos-7', /*'ubuntu-16',*/ ],
 	env: 		[
 		VERSION: false,
-		RELEASE: false,
+		RELEASE: true,
 		DRYRUN: false,
 		TARGET_DIR: 'target',
 		GIT_CRED: 'bot-ci-dgm-rsa',
@@ -88,7 +88,7 @@ lazyConfig(
 		DEPLOY_REPO: 'local',
 		DEPLOY_CRED: 'bot-ci-dgm-rsa',
 	],
-	noIndex:	"(${releaseBranch}|.+_.+)",	// Avoid automatic indexing for release and private branches
+	noIndex:	"(.+_.+)",	// Avoid automatic indexing for release and private branches
 	compressLog: false,
 	timestampsLog: true,
 )
@@ -244,7 +244,6 @@ lazyStage {
 lazyStage {
 	name = 'testing'
 	onlyif = ( lazyConfig['branch'] == releaseBranch )
-	input = 'Deploy to systemtest?'
 	tasks = [
 		pre: {
 			unarchive(mapping:["${env.TARGET_DIR}/" : '.'])
@@ -266,7 +265,7 @@ lazyStage {
 lazyStage {
 	name = 'stable'
 	onlyif = ( lazyConfig['branch'] == releaseBranch )
-	input = 'Deploy to production?'
+	input = 'Deploy to stable repo?'
 	tasks = [
 		pre: {
 			unarchive(mapping:["${env.TARGET_DIR}/" : '.'])
