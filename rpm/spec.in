@@ -11,7 +11,6 @@
 %define app_etcdir  %{_sysconfdir}/%{rpm_name}
 %define app_libdir  %{_var}/lib/%{rpm_name}
 %define app_logdir  %{_var}/log/%{rpm_name}
-%define app_tmpdir  %{_var}/tmp/%{rpm_name}
 
 Name:           %{rpm_name}
 Version:        %{rpm_version}
@@ -256,12 +255,12 @@ find . -name ".gitkeep" -exec rm {} \;
 
 %install
 install -d %{buildroot}%{app_root}
-%{__mkdir} -p %{buildroot}/{%{app_etcdir},%{app_libdir},%{app_logdir},%{app_tmpdir}}
-%{__cp} -rf config/* %{buildroot}%{app_etcdir}
-%{__cp} -rf db %{buildroot}%{app_libdir}
-%{__cp} -rf files %{buildroot}%{app_libdir}
-%{__cp} -rf tmp/* %{buildroot}%{app_tmpdir}
-%{__cp} -rf * %{buildroot}%{app_root}
+%{__mkdir} -p %{buildroot}/{%{app_etcdir},%{app_libdir},%{app_logdir}}
+%{__cp} -a config/* %{buildroot}%{app_etcdir}
+%{__cp} -a db %{buildroot}%{app_libdir}
+%{__cp} -a files %{buildroot}%{app_libdir}
+%{__cp} -a tmp %{buildroot}%{app_libdir}
+%{__cp} -a * %{buildroot}%{app_root}
 
 # Provide DB configs
 install -D -m644 %{SOURCE101} %{buildroot}%{app_etcdir}/database.yml.sqlite3
@@ -275,7 +274,7 @@ ln -s %{app_etcdir} config
 ln -s %{app_libdir}/db db
 ln -s %{app_libdir}/files files
 ln -s %{app_logdir} log
-ln -s %{app_tmpdir} tmp
+ln -s %{app_libdir}/tmp tmp
 popd
 
 # Don’t include bundle and Gemfiles
@@ -383,8 +382,8 @@ popd > /dev/null
 %{app_libdir}/db/*
 %attr(0775,root,nobody) %dir %{app_libdir}/files/
 %attr(0775,root,nobody) %dir %{app_logdir}/
-%attr(0775,root,nobody) %dir %{app_tmpdir}/
-%attr(0775,root,nobody) %dir %{app_tmpdir}/*
+%attr(0775,root,nobody) %dir %{app_libdir}/tmp/
+%attr(0775,root,nobody) %dir %{app_libdir}/tmp/*
 %dir %{app_root}/
 %{app_root}/bin/
 %{app_root}/config
