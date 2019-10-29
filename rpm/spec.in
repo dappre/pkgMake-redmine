@@ -395,7 +395,16 @@ popd > /dev/null
 %{app_root}/log
 %{app_root}/lib/
 %{app_root}/plugins/
-%{app_root}/public/
+%dir %{app_root}/public/
+%doc %{app_root}/public/*.example
+%{app_root}/public/*.html
+%{app_root}/public/*.ico
+%{app_root}/public/help/
+%{app_root}/public/images/
+%{app_root}/public/javascripts/
+%attr(0775,root,nobody) %dir %{app_root}/public/plugin_assets/
+%{app_root}/public/stylesheets/
+%{app_root}/public/themes/
 %{app_root}/Rakefile
 %{app_root}/tmp
 
