@@ -360,6 +360,9 @@ execRake db:migrate
 # Load default data in the DB
 REDMINE_LANG=en execRake redmine:load_default_data
 
+# Restart Redmine
+touch tmp/restart.txt
+
 # Return to inital directory
 popd > /dev/null
 
