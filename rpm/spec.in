@@ -12,6 +12,10 @@
 %define app_libdir  %{_var}/lib/%{rpm_name}
 %define app_logdir  %{_var}/log/%{rpm_name}
 
+# Parameterize user and group names
+%define rdm_username  nobody
+%define rdm_groupname nobody
+
 Name:           %{rpm_name}
 Version:        %{rpm_version}
 Release:        %{rpm_release}%{?dist}
@@ -297,7 +301,7 @@ install -D -m644 %{SOURCE105} %{buildroot}%{_sysconfdir}/httpd/conf.d/%{name}.co
 LOG_FILE="%{app_logdir}/production.log"
 if [ -n "${LOG_FILE}" -a ! -f "${LOG_FILE}" ]; then
   touch "${LOG_FILE}"
-  chown nobody:nobody "${LOG_FILE}"
+  chown %{rdm_username}:%{rdm_groupname} "${LOG_FILE}"
   chmod 0644 "${LOG_FILE}"
 fi
 # Use separeted log file for the following installation steps
@@ -344,9 +348,9 @@ DB_FILE="$(sed -n -r -e '/^production:/,/^$/ { s/^\s+database:\s*[^-_/\w]?(.+)[^
 DB_DIR="$(dirname "${DB_FILE}")"
 
 if [ "${DB_ADAPTER}" = 'sqlite3' -a -n "${DB_FILE}" -a ! -f "${DB_FILE}" ]; then
-  [ -d "${DB_DIR}" ] || { mkdir -p "${DB_DIR}" && chown root:nobody "${DB_DIR}" && chmod 0775 "${DB_DIR}"; }
+  [ -d "${DB_DIR}" ] || { mkdir -p "${DB_DIR}" && chown root:%{rdm_groupname} "${DB_DIR}" && chmod 0775 "${DB_DIR}"; }
   touch "${DB_FILE}"
-  chown nobody:nobody "${DB_FILE}"
+  chown %{rdm_username}:%{rdm_groupname} "${DB_FILE}"
   chmod 0644 "${DB_FILE}"
 fi
 
@@ -378,12 +382,12 @@ popd > /dev/null
 %{app_etcdir}/locales/
 %{app_etcdir}/routes.rb
 %config(noreplace) %{app_etcdir}/settings.yml
-%attr(0775,root,nobody) %dir %{app_libdir}/db/
+%attr(0775,root,%{rdm_groupname}) %dir %{app_libdir}/db/
 %{app_libdir}/db/*
-%attr(0775,root,nobody) %dir %{app_libdir}/files/
-%attr(0775,root,nobody) %dir %{app_logdir}/
-%attr(0775,root,nobody) %dir %{app_libdir}/tmp/
-%attr(0775,root,nobody) %dir %{app_libdir}/tmp/*
+%attr(0775,root,%{rdm_groupname}) %dir %{app_libdir}/files/
+%attr(0775,root,%{rdm_groupname}) %dir %{app_logdir}/
+%attr(0775,root,%{rdm_groupname}) %dir %{app_libdir}/tmp/
+%attr(0775,root,%{rdm_groupname}) %dir %{app_libdir}/tmp/*
 %dir %{app_root}/
 %{app_root}/bin/
 %{app_root}/config
@@ -402,7 +406,7 @@ popd > /dev/null
 %{app_root}/public/help/
 %{app_root}/public/images/
 %{app_root}/public/javascripts/
-%attr(0775,root,nobody) %dir %{app_root}/public/plugin_assets/
+%attr(0775,root,%{rdm_groupname}) %dir %{app_root}/public/plugin_assets/
 %{app_root}/public/stylesheets/
 %{app_root}/public/themes/
 %{app_root}/Rakefile
