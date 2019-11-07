@@ -377,14 +377,14 @@ popd > /dev/null
 %{app_root}/app/
 %dir %{app_etcdir}/
 %doc %{app_etcdir}/*.example
-%{app_etcdir}/application.rb
+%config(noreplace) %{app_etcdir}/application.rb
 %{app_etcdir}/boot.rb
 %{app_etcdir}/environment.rb
-%{app_etcdir}/environments/
+%config(noreplace) %{app_etcdir}/environments/
 %{app_etcdir}/initializers/
 %{app_etcdir}/locales/
 %{app_etcdir}/routes.rb
-%config(noreplace) %{app_etcdir}/settings.yml
+%{app_etcdir}/settings.yml
 %attr(0775,root,%{rdm_groupname}) %dir %{app_libdir}/db/
 %{app_libdir}/db/*
 %attr(0775,root,%{rdm_groupname}) %dir %{app_libdir}/files/
