@@ -92,7 +92,7 @@ lazyConfig(
 	compressLog:    false,
 	timestampsLog:  true,
 	xmppTargets:    'devops@conference.qiy.nl',
-	cleanWorkspace: false,
+	cleanWorkspace: true,
 )
 
 // Validate the project (parsing mostly)
