@@ -15,6 +15,7 @@
 # Parameterize user and group names
 %define rdm_username  nobody
 %define rdm_groupname nobody
+%define rdm_homedir   %{app_libdir}/home
 
 Name:           %{rpm_name}
 Version:        %{rpm_version}
@@ -257,6 +258,32 @@ find . -name ".gitkeep" -exec rm {} \;
 # Nothing to build here
 
 
+%pre
+echo "Checking if group %{rdm_groupname} exists..."
+getent group "%{rdm_groupname}" 2>&1 1>/dev/null
+if [ $? != 0  ]; then
+  echo "Group %{rdm_groupname} doesn't exist. Creating ..."
+  /usr/sbin/groupadd -r %{rdm_groupname} ${gid:+-g} $gid|| exit $?
+else
+  echo "Group %{rdm_groupname} exists."
+fi
+
+echo "Checking if %{rdm_homedir} exists"
+if [ ! -d "%{rdm_homedir}" ]; then
+  /bin/mkdir -p %{rdm_homedir}
+fi
+
+echo "Checking if user %{rdm_username} exists..."
+getent passwd "%{rdm_username}" 2>&1 1>/dev/null
+if [ $? != 0 ]; then
+  echo "User %{rdm_username} doesn't exist. Creating ..."
+  /usr/sbin/useradd %{rdm_username} -g %{rdm_groupname} -d %{rdm_homedir} ${uid:+-u} $uid || exit $?
+  chown %{rdm_username} %{rdm_homedir} || exit $?
+else
+  echo "User artifactory exists."
+fi
+
+
 %install
 install -d %{buildroot}%{app_root}
 %{__mkdir} -p %{buildroot}/{%{app_etcdir},%{app_libdir},%{app_logdir}}
@@ -265,6 +292,7 @@ install -d %{buildroot}%{app_root}
 %{__cp} -a files %{buildroot}%{app_libdir}
 %{__cp} -a tmp %{buildroot}%{app_libdir}
 %{__cp} -a * %{buildroot}%{app_root}
+%{__mkdir} -p %{buildroot}/%{rdm_homedir}
 
 # Provide DB configs
 install -D -m644 %{SOURCE101} %{buildroot}%{app_etcdir}/database.yml.sqlite3
@@ -414,7 +442,7 @@ popd > /dev/null
 %{app_root}/public/themes/
 %{app_root}/Rakefile
 %{app_root}/tmp
-
+%attr(0775,%{rdm_username},%{rdm_groupname}) %{rdm_homedir}
 
 %changelog
 %include %{_specdir}/changelog
