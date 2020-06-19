@@ -1,3 +1,9 @@
+* Fri Jun 19 2020 Digital-Me Infra Team <infra@digital-me.nl> - 4.0.7-1
+- Rolling out version 4.0.7 - https://www.redmine.org/versions/159
+- Rebuild against ImageMagick 6.9.x since 6.7.x has been remove from main repo
+- Switch to Ruby 2.4 since 2.2 has been remove from sclo repo
+- Update gems to date
+
 * Wed Oct 16 2019 Digital-Me Infra Team <infra@digital-me.nl> - 4.0.1-3
 - Rolling out version 4.0.1 - http://www.redmine.org/versions/145
 - Reworked from Fedora to build on CentOS (7.7.1908) using rpmMake
