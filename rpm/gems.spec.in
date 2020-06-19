@@ -182,8 +182,8 @@ install -D -m644 %{SOURCE102} Gemfile.local
 # Add Gemfile.lock toand fix gem versions for this package
 install -D -m644 %{SOURCE103} Gemfile.lock
 # Install pre-dowloaded gems in the cache
-%{__mkdir} -p vendor/cache
-%{__cp} -a %{_sourcedir}/*.gem vendor/cache
+%{__mkdir} -p %{gem_vendir}/cache
+%{__cp} -a %{_sourcedir}/*.gem %{gem_vendir}/cache
 
 # Provide database.yml as it’s mandatory to run redmine
 install -D -m644 %{SOURCE101} config/database.yml
@@ -195,18 +195,18 @@ install -D -m644 %{SOURCE101} config/database.yml
 scl enable %{ruby_scl} -- bundle config --local without developement:test
 scl enable %{ruby_scl} -- bundle config --local with ldap:openid
 scl enable %{ruby_scl} -- bundle install --deployment --local
-#scl enable %{ruby_scl} -- bundle config --local path vendor/bundle
-#scl enable %{ruby_scl} -- bundle config --local binstubs vendor/bundle/ruby/bin
+#scl enable %{ruby_scl} -- bundle config --local path %{gem_bundir}
+#scl enable %{ruby_scl} -- bundle config --local binstubs %{gem_bindir}
 #scl enable %{ruby_scl} -- bundle config --local disable_shared_gems 1
 #scl enable %{ruby_scl} -- bundle install --local
 #scl enable %{ruby_scl} -- bundle config --local frozen 1
 
 # Cleanup
-find vendor/bundle -name ".cvsignore" -exec rm {} \;
-find vendor/bundle -name ".gitignore" -exec rm {} \;
+find %{gem_bundir} -name ".cvsignore" -exec rm {} \;
+find %{gem_bundir} -name ".gitignore" -exec rm {} \;
 #%{__rm} -f Gemfile.lock
 %{__rm} -f Gemfile.local
-%{__rm} -rf vendor/cache
+%{__rm} -rf %{gem_vendir}/cache
 %{__rm} -rf %{gem_extdir}/*/{gem_make.out,gem.build_complete,mkmf.log}
 %{__rm} -rf %{gem_insdir}/gems/*/patches
 %{__rm} -rf %{gem_insdir}/gems/*/test
@@ -236,7 +236,7 @@ sed -r -e '/\/(mysql2|pg|sqlite3)-[.0-9]+(\.gemspec)?$/ d' -i gems.lst
 %install
 # Install all gems as a local bundle
 %{__mkdir} -p %{buildroot}%{app_root}
-%{__cp} -a Gemfile* .bundle vendor %{buildroot}%{app_root}
+%{__cp} -a Gemfile* .bundle %{gem_vendir} %{buildroot}%{app_root}
 
 
 %postun
