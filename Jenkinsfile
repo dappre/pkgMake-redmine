@@ -89,8 +89,10 @@ lazyConfig(
 		DEPLOY_CRED: 'bot-ci-dgm-rsa',
 	],
 	noIndex:	"(.+_.+)",	// Avoid automatic indexing for release and private branches
-	compressLog: false,
-	timestampsLog: true,
+	compressLog:    false,
+	timestampsLog:  true,
+	xmppTargets:    'devops@conference.qiy.nl',
+	cleanWorkspace: false,
 )
 
 // Validate the project (parsing mostly)
