@@ -3,7 +3,7 @@
 %define rpm_release  #RPM_RELEASE#
 %define rpm_packager #RPM_PACKAGER#
 
-%define ruby_scl    rh-ruby22
+%define ruby_scl    rh-ruby24
 %define ruby_pfx    %{ruby_scl}-
 %define ruby_dir    /opt/rh/%{ruby_scl}/root
 %define app_root    %{_var}/www/%{rpm_name}
@@ -11,7 +11,11 @@
 %define app_etcdir  %{_sysconfdir}/%{rpm_name}
 %define app_libdir  %{_var}/lib/%{rpm_name}
 %define app_logdir  %{_var}/log/%{rpm_name}
-%define app_tmpdir  %{_var}/tmp/%{rpm_name}
+
+# Parameterize user and group names
+%define rdm_username  nobody
+%define rdm_groupname nobody
+%define rdm_homedir   %{app_libdir}/home
 
 Name:           %{rpm_name}
 Version:        %{rpm_version}
@@ -254,14 +258,41 @@ find . -name ".gitkeep" -exec rm {} \;
 # Nothing to build here
 
 
+%pre
+echo "Checking if group %{rdm_groupname} exists..."
+getent group "%{rdm_groupname}" 2>&1 1>/dev/null
+if [ $? != 0  ]; then
+  echo "Group %{rdm_groupname} doesn't exist. Creating ..."
+  /usr/sbin/groupadd -r %{rdm_groupname} ${gid:+-g} $gid|| exit $?
+else
+  echo "Group %{rdm_groupname} exists."
+fi
+
+echo "Checking if %{rdm_homedir} exists"
+if [ ! -d "%{rdm_homedir}" ]; then
+  /bin/mkdir -p %{rdm_homedir}
+fi
+
+echo "Checking if user %{rdm_username} exists..."
+getent passwd "%{rdm_username}" 2>&1 1>/dev/null
+if [ $? != 0 ]; then
+  echo "User %{rdm_username} doesn't exist. Creating ..."
+  /usr/sbin/useradd %{rdm_username} -g %{rdm_groupname} -d %{rdm_homedir} ${uid:+-u} $uid || exit $?
+  chown %{rdm_username} %{rdm_homedir} || exit $?
+else
+  echo "User artifactory exists."
+fi
+
+
 %install
 install -d %{buildroot}%{app_root}
-%{__mkdir} -p %{buildroot}/{%{app_etcdir},%{app_libdir},%{app_logdir},%{app_tmpdir}}
-%{__cp} -rf config/* %{buildroot}%{app_etcdir}
-%{__cp} -rf db %{buildroot}%{app_libdir}
-%{__cp} -rf files %{buildroot}%{app_libdir}
-%{__cp} -rf tmp/* %{buildroot}%{app_tmpdir}
-%{__cp} -rf * %{buildroot}%{app_root}
+%{__mkdir} -p %{buildroot}/{%{app_etcdir},%{app_libdir},%{app_logdir}}
+%{__cp} -a config/* %{buildroot}%{app_etcdir}
+%{__cp} -a db %{buildroot}%{app_libdir}
+%{__cp} -a files %{buildroot}%{app_libdir}
+%{__cp} -a tmp %{buildroot}%{app_libdir}
+%{__cp} -a * %{buildroot}%{app_root}
+%{__mkdir} -p %{buildroot}/%{rdm_homedir}
 
 # Provide DB configs
 install -D -m644 %{SOURCE101} %{buildroot}%{app_etcdir}/database.yml.sqlite3
@@ -275,7 +306,7 @@ ln -s %{app_etcdir} config
 ln -s %{app_libdir}/db db
 ln -s %{app_libdir}/files files
 ln -s %{app_logdir} log
-ln -s %{app_tmpdir} tmp
+ln -s %{app_libdir}/tmp tmp
 popd
 
 # Don’t include bundle and Gemfiles
@@ -298,7 +329,7 @@ install -D -m644 %{SOURCE105} %{buildroot}%{_sysconfdir}/httpd/conf.d/%{name}.co
 LOG_FILE="%{app_logdir}/production.log"
 if [ -n "${LOG_FILE}" -a ! -f "${LOG_FILE}" ]; then
   touch "${LOG_FILE}"
-  chown nobody:nobody "${LOG_FILE}"
+  chown %{rdm_username}:%{rdm_groupname} "${LOG_FILE}"
   chmod 0644 "${LOG_FILE}"
 fi
 # Use separeted log file for the following installation steps
@@ -345,9 +376,9 @@ DB_FILE="$(sed -n -r -e '/^production:/,/^$/ { s/^\s+database:\s*[^-_/\w]?(.+)[^
 DB_DIR="$(dirname "${DB_FILE}")"
 
 if [ "${DB_ADAPTER}" = 'sqlite3' -a -n "${DB_FILE}" -a ! -f "${DB_FILE}" ]; then
-  [ -d "${DB_DIR}" ] || { mkdir -p "${DB_DIR}" && chown root:nobody "${DB_DIR}" && chmod 0775 "${DB_DIR}"; }
+  [ -d "${DB_DIR}" ] || { mkdir -p "${DB_DIR}" && chown root:%{rdm_groupname} "${DB_DIR}" && chmod 0775 "${DB_DIR}"; }
   touch "${DB_FILE}"
-  chown nobody:nobody "${DB_FILE}"
+  chown %{rdm_username}:%{rdm_groupname} "${DB_FILE}"
   chmod 0644 "${DB_FILE}"
 fi
 
@@ -356,6 +387,9 @@ execRake db:migrate
 
 # Load default data in the DB
 REDMINE_LANG=en execRake redmine:load_default_data
+
+# Restart Redmine
+touch tmp/restart.txt
 
 # Return to inital directory
 popd > /dev/null
@@ -371,20 +405,20 @@ popd > /dev/null
 %{app_root}/app/
 %dir %{app_etcdir}/
 %doc %{app_etcdir}/*.example
-%{app_etcdir}/application.rb
+%config(noreplace) %{app_etcdir}/application.rb
 %{app_etcdir}/boot.rb
 %{app_etcdir}/environment.rb
-%{app_etcdir}/environments/
+%config(noreplace) %{app_etcdir}/environments/
 %{app_etcdir}/initializers/
 %{app_etcdir}/locales/
 %{app_etcdir}/routes.rb
-%config(noreplace) %{app_etcdir}/settings.yml
-%attr(0775,root,nobody) %dir %{app_libdir}/db/
+%{app_etcdir}/settings.yml
+%attr(0775,root,%{rdm_groupname}) %dir %{app_libdir}/db/
 %{app_libdir}/db/*
-%attr(0775,root,nobody) %dir %{app_libdir}/files/
-%attr(0775,root,nobody) %dir %{app_logdir}/
-%attr(0775,root,nobody) %dir %{app_tmpdir}/
-%attr(0775,root,nobody) %dir %{app_tmpdir}/*
+%attr(0775,root,%{rdm_groupname}) %dir %{app_libdir}/files/
+%attr(0775,root,%{rdm_groupname}) %dir %{app_logdir}/
+%attr(0775,root,%{rdm_groupname}) %dir %{app_libdir}/tmp/
+%attr(0775,root,%{rdm_groupname}) %dir %{app_libdir}/tmp/*
 %dir %{app_root}/
 %{app_root}/bin/
 %{app_root}/config
@@ -396,10 +430,19 @@ popd > /dev/null
 %{app_root}/log
 %{app_root}/lib/
 %{app_root}/plugins/
-%{app_root}/public/
+%dir %{app_root}/public/
+%doc %{app_root}/public/*.example
+%{app_root}/public/*.html
+%{app_root}/public/*.ico
+%{app_root}/public/help/
+%{app_root}/public/images/
+%{app_root}/public/javascripts/
+%attr(0775,root,%{rdm_groupname}) %dir %{app_root}/public/plugin_assets/
+%{app_root}/public/stylesheets/
+%{app_root}/public/themes/
 %{app_root}/Rakefile
 %{app_root}/tmp
-
+%attr(0775,%{rdm_username},%{rdm_groupname}) %{rdm_homedir}
 
 %changelog
 %include %{_specdir}/changelog

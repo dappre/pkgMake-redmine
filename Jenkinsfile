@@ -75,10 +75,10 @@ def releaseBranch = 'stable'
 // Initialize configuration
 lazyConfig(
 	name: 'pkgmake',
-	inLabels: [ /*'centos-6',*/ 'centos-7', /*'ubuntu-16',*/ ],
+	inLabels: [ /*'centos6',*/ 'centos7', /*'ubuntu16',*/ ],
 	env: 		[
 		VERSION: false,
-		RELEASE: false,
+		RELEASE: true,
 		DRYRUN: false,
 		TARGET_DIR: 'target',
 		GIT_CRED: 'bot-ci-dgm-rsa',
@@ -88,9 +88,11 @@ lazyConfig(
 		DEPLOY_REPO: 'local',
 		DEPLOY_CRED: 'bot-ci-dgm-rsa',
 	],
-	noIndex:	"(${releaseBranch}|.+_.+)",	// Avoid automatic indexing for release and private branches
-	compressLog: false,
-	timestampsLog: true,
+	noIndex:	"(.+_.+)",	// Avoid automatic indexing for release and private branches
+	compressLog:    false,
+	timestampsLog:  true,
+	xmppTargets:    'devops@conference.qiy.nl',
+	cleanWorkspace: true,
 )
 
 // Validate the project (parsing mostly)
@@ -244,7 +246,6 @@ lazyStage {
 lazyStage {
 	name = 'testing'
 	onlyif = ( lazyConfig['branch'] == releaseBranch )
-	input = 'Deploy to systemtest?'
 	tasks = [
 		pre: {
 			unarchive(mapping:["${env.TARGET_DIR}/" : '.'])
@@ -266,7 +267,7 @@ lazyStage {
 lazyStage {
 	name = 'stable'
 	onlyif = ( lazyConfig['branch'] == releaseBranch )
-	input = 'Deploy to production?'
+	input = 'Deploy to stable repo?'
 	tasks = [
 		pre: {
 			unarchive(mapping:["${env.TARGET_DIR}/" : '.'])
