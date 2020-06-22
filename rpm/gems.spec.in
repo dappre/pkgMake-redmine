@@ -3,15 +3,15 @@
 %define rpm_release  #RPM_RELEASE#
 %define rpm_packager #RPM_PACKAGER#
 
-%define ruby_scl    rh-ruby22
+%define ruby_scl    rh-ruby24
 %define ruby_pfx    %{ruby_scl}-
 %define ruby_dir    /opt/rh/%{ruby_scl}/root
 %define app_root    %{_var}/www/%{rpm_name}
 %define gem_vendir  vendor
 %define gem_bundir  %{gem_vendir}/bundle
-%define gem_insdir  %{gem_bundir}/ruby
+%define gem_insdir  %{gem_bundir}/ruby/2.4.0
 %define gem_bindir  %{gem_insdir}/bin
-%define gem_extdir  %{gem_insdir}/extensions/%{_arch}-linux
+%define gem_extdir  %{gem_insdir}/extensions/%{_arch}-linux/2.4.0
 
 Name:           %{rpm_name}-gems
 Version:        %{rpm_version}
@@ -24,48 +24,49 @@ Source0:        http://www.redmine.org/releases/#RPM_NAME#-#RPM_VERSION#.tar.gz
 Source101:      %{rpm_name}-database.yml.sqlite3
 Source102:      %{rpm_name}-Gemfile.local
 Source103:      %{rpm_name}-Gemfile.lock
-Patch1:         %{rpm_name}-Gemfile.patch
+#Patch1:         %{rpm_name}-Gemfile.patch
 # All required gems
-Source1001:     https://rubygems.org/downloads/actioncable-5.2.2.gem
-Source1002:     https://rubygems.org/downloads/actionmailer-5.2.2.gem
-Source1003:     https://rubygems.org/downloads/actionpack-5.2.2.gem
+Source1001:     https://rubygems.org/downloads/actioncable-5.2.4.2.gem
+Source1002:     https://rubygems.org/downloads/actionmailer-5.2.4.2.gem
+Source1003:     https://rubygems.org/downloads/actionpack-5.2.4.2.gem
 Source1004:     https://rubygems.org/downloads/actionpack-xml_parser-2.0.1.gem
-Source1005:     https://rubygems.org/downloads/actionview-5.2.2.gem
-Source1006:     https://rubygems.org/downloads/activejob-5.2.2.gem
-Source1007:     https://rubygems.org/downloads/activemodel-5.2.2.gem
-Source1008:     https://rubygems.org/downloads/activerecord-5.2.2.gem
-Source1009:     https://rubygems.org/downloads/activestorage-5.2.2.gem
-Source1010:     https://rubygems.org/downloads/activesupport-5.2.2.gem
+Source1005:     https://rubygems.org/downloads/actionview-5.2.4.2.gem
+Source1006:     https://rubygems.org/downloads/activejob-5.2.4.2.gem
+Source1007:     https://rubygems.org/downloads/activemodel-5.2.4.2.gem
+Source1008:     https://rubygems.org/downloads/activerecord-5.2.4.2.gem
+Source1009:     https://rubygems.org/downloads/activestorage-5.2.4.2.gem
+Source1010:     https://rubygems.org/downloads/activesupport-5.2.4.2.gem
 Source1011:     https://rubygems.org/downloads/addressable-2.7.0.gem
 Source1012:     https://rubygems.org/downloads/arel-9.0.0.gem
-Source1013:     https://rubygems.org/downloads/builder-3.2.3.gem
-Source1014:     https://rubygems.org/downloads/concurrent-ruby-1.1.5.gem
-Source1015:     https://rubygems.org/downloads/crass-1.0.4.gem
-Source1016:     https://rubygems.org/downloads/css_parser-1.7.0.gem
+Source1013:     https://rubygems.org/downloads/builder-3.2.4.gem
+Source1014:     https://rubygems.org/downloads/concurrent-ruby-1.1.6.gem
+Source1015:     https://rubygems.org/downloads/crass-1.0.6.gem
+Source1016:     https://rubygems.org/downloads/css_parser-1.7.1.gem
+Source1060:     https://rubygems.org/downloads/csv-3.0.9.gem
 Source1017:     https://rubygems.org/downloads/erubi-1.9.0.gem
 Source1018:     https://rubygems.org/downloads/globalid-0.4.2.gem
 Source1019:     https://rubygems.org/downloads/htmlentities-4.3.4.gem
 Source1020:     https://rubygems.org/downloads/i18n-0.7.0.gem
-Source1021:     https://rubygems.org/downloads/loofah-2.3.0.gem
+Source1021:     https://rubygems.org/downloads/loofah-2.6.0.gem
 Source1022:     https://rubygems.org/downloads/mail-2.7.1.gem
 Source1023:     https://rubygems.org/downloads/marcel-0.3.3.gem
-Source1024:     https://rubygems.org/downloads/method_source-0.9.2.gem
-Source1025:     https://rubygems.org/downloads/mimemagic-0.3.3.gem
+Source1024:     https://rubygems.org/downloads/method_source-1.0.0.gem
+Source1025:     https://rubygems.org/downloads/mimemagic-0.3.5.gem
 Source1026:     https://rubygems.org/downloads/mini_mime-1.0.2.gem
 Source1027:     https://rubygems.org/downloads/mini_portile2-2.4.0.gem
-Source1028:     https://rubygems.org/downloads/minitest-5.12.2.gem
-Source1029:     https://rubygems.org/downloads/net-ldap-0.16.1.gem
-Source1030:     https://rubygems.org/downloads/nio4r-2.3.1.gem
-Source1031:     https://rubygems.org/downloads/nokogiri-1.9.1.gem
-Source1032:     https://rubygems.org/downloads/public_suffix-3.1.1.gem
-Source1033:     https://rubygems.org/downloads/rack-2.0.7.gem
+Source1028:     https://rubygems.org/downloads/minitest-5.14.1.gem
+Source1029:     https://rubygems.org/downloads/net-ldap-0.16.2.gem
+Source1030:     https://rubygems.org/downloads/nio4r-2.5.2.gem
+Source1031:     https://rubygems.org/downloads/nokogiri-1.10.9.gem
+Source1032:     https://rubygems.org/downloads/public_suffix-4.0.5.gem
+Source1033:     https://rubygems.org/downloads/rack-2.2.3.gem
 Source1034:     https://rubygems.org/downloads/rack-openid-1.4.2.gem
 Source1035:     https://rubygems.org/downloads/rack-test-1.1.0.gem
-Source1036:     https://rubygems.org/downloads/rails-5.2.2.gem
+Source1036:     https://rubygems.org/downloads/rails-5.2.4.2.gem
 Source1037:     https://rubygems.org/downloads/rails-dom-testing-2.0.3.gem
 Source1038:     https://rubygems.org/downloads/rails-html-sanitizer-1.3.0.gem
-Source1039:     https://rubygems.org/downloads/railties-5.2.2.gem
-Source1040:     https://rubygems.org/downloads/rake-13.0.0.gem
+Source1039:     https://rubygems.org/downloads/railties-5.2.4.2.gem
+Source1040:     https://rubygems.org/downloads/rake-13.0.1.gem
 Source1041:     https://rubygems.org/downloads/rbpdf-1.19.8.gem
 Source1042:     https://rubygems.org/downloads/rbpdf-font-1.19.1.gem
 Source1043:     https://rubygems.org/downloads/redcarpet-3.4.0.gem
@@ -74,20 +75,20 @@ Source1045:     https://rubygems.org/downloads/rmagick-2.16.0.gem
 Source1046:     https://rubygems.org/downloads/roadie-3.5.1.gem
 Source1047:     https://rubygems.org/downloads/roadie-rails-1.3.0.gem
 Source1048:     https://rubygems.org/downloads/rouge-3.3.0.gem
-Source1049:     https://rubygems.org/downloads/ruby-openid-2.3.0.gem
-Source1050:     https://rubygems.org/downloads/rubyzip-1.2.4.gem
+Source1049:     https://rubygems.org/downloads/ruby-openid-2.9.2.gem
+Source1050:     https://rubygems.org/downloads/rubyzip-2.0.0.gem
 Source1051:     https://rubygems.org/downloads/sprockets-3.7.2.gem
 Source1052:     https://rubygems.org/downloads/sprockets-rails-3.2.1.gem
-Source1053:     https://rubygems.org/downloads/thor-0.20.3.gem
+Source1053:     https://rubygems.org/downloads/thor-1.0.1.gem
 Source1054:     https://rubygems.org/downloads/thread_safe-0.3.6.gem
-Source1055:     https://rubygems.org/downloads/tzinfo-1.2.5.gem
-Source1056:     https://rubygems.org/downloads/websocket-driver-0.7.1.gem
-Source1057:     https://rubygems.org/downloads/websocket-extensions-0.1.4.gem
-Source1058:     https://rubygems.org/downloads/xpath-3.1.0.gem
-Source1059:     https://rubygems.org/downloads/yard-0.9.20.gem
+Source1055:     https://rubygems.org/downloads/tzinfo-1.2.7.gem
+Source1056:     https://rubygems.org/downloads/websocket-driver-0.7.2.gem
+Source1057:     https://rubygems.org/downloads/websocket-extensions-0.1.5.gem
+Source1058:     https://rubygems.org/downloads/xpath-3.2.0.gem
+Source1059:     https://rubygems.org/downloads/yard-0.9.25.gem
 # DB gems
 Source1101:     https://rubygems.org/downloads/sqlite3-1.3.13.gem
-Source1102:     https://rubygems.org/downloads/mysql2-0.5.2.gem
+Source1102:     https://rubygems.org/downloads/mysql2-0.5.3.gem
 Source1103:     https://rubygems.org/downloads/pg-1.1.4.gem
 Requires:       %{ruby_pfx}ruby
 Requires:       %{ruby_pfx}rubygems
@@ -175,14 +176,14 @@ database backend.
 %prep
 %setup -q -n %{rpm_name}-%{rpm_version}
 # Patch Gemfile to handle recent incompatibilities
-%patch1 -p1
+#%patch1 -p1
 # Add Gemfile.local to provide other DB gems
 install -D -m644 %{SOURCE102} Gemfile.local
 # Add Gemfile.lock toand fix gem versions for this package
 install -D -m644 %{SOURCE103} Gemfile.lock
 # Install pre-dowloaded gems in the cache
-%{__mkdir} -p vendor/cache
-%{__cp} -a %{_sourcedir}/*.gem vendor/cache
+%{__mkdir} -p %{gem_vendir}/cache
+%{__cp} -a %{_sourcedir}/*.gem %{gem_vendir}/cache
 
 # Provide database.yml as it’s mandatory to run redmine
 install -D -m644 %{SOURCE101} config/database.yml
@@ -194,18 +195,18 @@ install -D -m644 %{SOURCE101} config/database.yml
 scl enable %{ruby_scl} -- bundle config --local without developement:test
 scl enable %{ruby_scl} -- bundle config --local with ldap:openid
 scl enable %{ruby_scl} -- bundle install --deployment --local
-#scl enable %{ruby_scl} -- bundle config --local path vendor/bundle
-#scl enable %{ruby_scl} -- bundle config --local binstubs vendor/bundle/ruby/bin
+#scl enable %{ruby_scl} -- bundle config --local path %{gem_bundir}
+#scl enable %{ruby_scl} -- bundle config --local binstubs %{gem_bindir}
 #scl enable %{ruby_scl} -- bundle config --local disable_shared_gems 1
 #scl enable %{ruby_scl} -- bundle install --local
 #scl enable %{ruby_scl} -- bundle config --local frozen 1
 
 # Cleanup
-find vendor/bundle -name ".cvsignore" -exec rm {} \;
-find vendor/bundle -name ".gitignore" -exec rm {} \;
+find %{gem_bundir} -name ".cvsignore" -exec rm {} \;
+find %{gem_bundir} -name ".gitignore" -exec rm {} \;
 #%{__rm} -f Gemfile.lock
 %{__rm} -f Gemfile.local
-%{__rm} -rf vendor/cache
+%{__rm} -rf %{gem_vendir}/cache
 %{__rm} -rf %{gem_extdir}/*/{gem_make.out,gem.build_complete,mkmf.log}
 %{__rm} -rf %{gem_insdir}/gems/*/patches
 %{__rm} -rf %{gem_insdir}/gems/*/test
@@ -220,9 +221,9 @@ find vendor/bundle -name ".gitignore" -exec rm {} \;
 %{__rm} -rf %{gem_insdir}/gems/rbpdf-font-*/lib/fonts/ttf2ufm
 
 # Produce lists of gem files
-find vendor/bundle/ruby/specifications -mindepth 1 -maxdepth 1 -name "*.gemspec" -type f -print >> gems.lst
-find vendor/bundle/ruby/gems -mindepth 1 -maxdepth 1 -name "*-*" -type d -print >> gems.lst
-find vendor/bundle/ruby/extensions/%{_arch}-linux -mindepth 1 -maxdepth 1 -name "*-*" -type d -print >> gems.lst
+find %{gem_insdir}/specifications -mindepth 1 -maxdepth 1 -name "*.gemspec" -type f -print >> gems.lst
+find %{gem_insdir}/gems -mindepth 1 -maxdepth 1 -name "*-*" -type d -print >> gems.lst
+find %{gem_extdir} -mindepth 1 -maxdepth 1 -name "*-*" -type d -print >> gems.lst
 # Prefix list with app root for absolute paths
 sed -r -e 's#^#%{app_root}/#' -i gems.lst
 # Split in file lists per DB
@@ -235,7 +236,7 @@ sed -r -e '/\/(mysql2|pg|sqlite3)-[.0-9]+(\.gemspec)?$/ d' -i gems.lst
 %install
 # Install all gems as a local bundle
 %{__mkdir} -p %{buildroot}%{app_root}
-%{__cp} -a Gemfile* .bundle vendor %{buildroot}%{app_root}
+%{__cp} -a Gemfile* .bundle %{gem_vendir} %{buildroot}%{app_root}
 
 
 %postun

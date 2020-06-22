@@ -1,21 +1,4 @@
-diff -rNu a/Gemfile b/Gemfile
---- a/Gemfile	2019-01-20 07:58:16.000000000 +0100
-+++ b/Gemfile	2019-09-13 10:42:39.426075907 +0200
-@@ -33,7 +38,7 @@
- platforms :mri, :mingw, :x64_mingw do
-   # Optional gem for exporting the gantt to a PNG file, not supported with jruby
-   group :rmagick do
--    gem "rmagick", ">= 2.14.0"
-+    gem "rmagick", (RUBY_VERSION >= "2.3" ? "~> 4.0.0" : "~> 2.16.0")
-   end
- 
-   # Optional Markdown support, not for JRuby
-@@ -84,7 +89,7 @@
-   # For running system tests
-   gem 'puma', '~> 3.7'
-   gem "capybara", '~> 2.13'
--  gem "selenium-webdriver"
-+  gem "selenium-webdriver", "3.141.0"
- end
- 
- local_gemfile = File.join(File.dirname(__FILE__), "Gemfile.local")
+# Not required with this release,
+# but useful to fix gem deps when needed
+#diff -rNu a/Gemfile b/Gemfile
+#...
