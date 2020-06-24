@@ -143,19 +143,19 @@ lazyStage {
 			}
 			sh(
 """
-DIST=\"\${LAZY_LABEL}-\$(arch)\"
+DIST="\${LAZY_LABEL}-\$(arch)"
 make \
 VERSION=${version} \
 RELEASE=${release} \
-TARGET_DIR=\$(pwd)/${env.TARGET_DIR} \
-DISTS_DIR=\$(pwd)/${env.TARGET_DIR}/dists/\${DIST} \
+TARGET_DIR="\$(pwd)/\${TARGET_DIR}" \
+DISTS_DIR="\$(pwd)/\${TARGET_DIR}/dists/\${DIST}" \
 LOG_FILE=/dev/stdout
 """
 			)
 			sh(
 """
-DIST=\"\${LAZY_LABEL}-\$(arch)\"
-cd ${env.TARGET_DIR}/dists/\${DIST}
+DIST="\${LAZY_LABEL}-\$(arch)"
+cd "\${TARGET_DIR}/dists/\${DIST}"
 sudo yum -y install redmine-${version}-${release}.*.rpm \
  redmine-gems-${version}-${release}.*.rpm \
  redmine-sqlite-${version}-${release}.*.rpm \
@@ -185,12 +185,12 @@ lazyStage {
 			currentBuild.displayName = "#${env.BUILD_NUMBER} ${version}-${release}"
 			sh(
 """
-DIST=\"\${LAZY_LABEL}-\$(arch)\"
+DIST="\${LAZY_LABEL}-\$(arch)"
 make \
 VERSION=${version} \
 RELEASE=${release} \
-TARGET_DIR=\$(pwd)/${env.TARGET_DIR} \
-DISTS_DIR=\$(pwd)/${env.TARGET_DIR}/dists/\${DIST} \
+TARGET_DIR="\$(pwd)/\${TARGET_DIR}" \
+DISTS_DIR="\$(pwd)/\${TARGET_DIR}/dists/\${DIST}" \
 LOG_FILE=/dev/stdout
 """
 			)
